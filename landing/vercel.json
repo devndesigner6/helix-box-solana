@@ -1,0 +1,14 @@
+{
+  "version": 2,
+  "name": "helixbox-landing",
+  "buildCommand": "npm run build",
+  "outputDirectory": "dist",
+  "framework": "vite",
+  "rewrites": [
+    { "source": "/media/:path*", "destination": "/assets/media/:path*" },
+    { "source": "/logos/:path*", "destination": "/assets/logos/:path*" },
+    { "source": "/fonts/:path*", "destination": "/assets/fonts/:path*" },
+    { "source": "/helixbox.png", "destination": "/assets/images/helixbox.png" },
+    { "source": "/helixbox-splash.png", "destination": "/assets/images/helixbox-splash.png" }
+  ]
+}
