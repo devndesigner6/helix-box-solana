@@ -1,0 +1,52 @@
+import { test, expect } from 'bun:test';
+import { Database } from 'bun:sqlite';
+import { createModelStore } from '../src/model-store.ts';
+const terms = {modelId:'lab/code',kind:'chat',provider:'lab',amount:'1000',expiresAt:Date.now()+120000,limits:{maxOutputTokens:20},markupBps:2000,minimumAmount:'1000'} as any;
+test('encrypts inputs and results, enforces ownership and never executes a purchase twice', () => {
+  const db = new Database(':memory:');
+  const store = createModelStore(db,'test-encryption-material');
+  const quote = store.create('owner',terms,{prompt:'private project snippet'});
+  expect(() => store.get('other',quote.id)).toThrow();
+  expect(JSON.stringify(db.query('SELECT * FROM model_purchases').get())).not.toContain('private project snippet');
+  store.beginPayment('owner',quote.id,'fingerprint');
+  store.settled('owner',quote.id,'tx-1');
+  expect(store.start('owner',quote.id)).toBe(true);
+  expect(store.start('owner',quote.id)).toBe(false);
+  store.complete('owner',quote.id,{kind:'chat',text:'private answer',generationId:'g1',providerCost:null});
+  expect(store.get('owner',quote.id).result?.text).toBe('private answer');
+  expect(JSON.stringify(db.query('SELECT * FROM model_purchases').get())).not.toContain('private answer');
+  const restored = createModelStore(db,'test-encryption-material');
+  expect(restored.get('owner',quote.id).result?.text).toBe('private answer');
+});
+test('refuses payment reuse and holds interrupted settlement instead of charging again', () => {
+  const db = new Database(':memory:'); const store = createModelStore(db,'key');
+  const first = store.create('owner',terms,{prompt:'first'}); const second = store.create('owner',terms,{prompt:'second'});
+  store.beginPayment('owner',first.id,'proof-1'); store.settled('owner',first.id,'tx-1');
+  store.beginPayment('owner',second.id,'proof-2');
+  expect(() => store.settled('owner',second.id,'tx-1')).toThrow();
+  const restored = createModelStore(db,'key');
+  expect(restored.get('owner',second.id).state).toBe('settlement_uncertain');
+  expect(() => restored.beginPayment('owner',second.id,'proof-3')).toThrow();
+});
+test('private reads and execution enforce retention without catalog traffic',()=>{
+  const db=new Database(':memory:');const store=createModelStore(db,'key');
+  const completed=store.create('owner',terms,{prompt:'private input'});
+  store.beginPayment('owner',completed.id,'fp-1');store.settled('owner',completed.id,'tx-1');store.start('owner',completed.id);
+  store.complete('owner',completed.id,{kind:'chat',text:'expired secret',generationId:null,providerCost:null});
+  const paid=store.create('owner',terms,{prompt:'do not dispatch'});
+  store.beginPayment('owner',paid.id,'fp-2');store.settled('owner',paid.id,'tx-2');
+  db.query('UPDATE model_purchases SET created_at=?').run(Date.now()-86400001);
+  expect(store.get('owner',completed.id).result).toBeNull();
+  expect(()=>store.input('owner',paid.id)).toThrow();
+  expect(store.start('owner',paid.id)).toBe(false);
+  expect(store.get('owner',paid.id).state).toBe('refund_due');
+});
+test('history query never loads encrypted artifact or prompt blobs',()=>{
+  const db=new Database(':memory:');const queries:string[]=[];
+  const query=db.query.bind(db);
+  const tracked=new Proxy(db,{get(target,key){if(key==='query')return(sql:string)=>{queries.push(sql);return query(sql);};const value=Reflect.get(target,key);return typeof value==='function'?value.bind(target):value;}});
+  const store=createModelStore(tracked,'key');store.create('owner',terms,{prompt:'hi'});queries.length=0;
+  expect(store.list('owner')).toHaveLength(1);
+  const select=queries.find(sql=>sql.includes('ORDER BY'))!;
+  expect(select).not.toContain('*');expect(select).not.toMatch(/\b(?:input|result)\b/);
+});

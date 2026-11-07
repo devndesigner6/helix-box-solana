@@ -14,10 +14,13 @@
     "@x402/hono": "2.30.0",
     "@x402/svm": "2.30.0",
     "dotenv": "^17.4.2",
-    "hono": "4.13.17"
+    "hono": "4.13.17",
+    "mpg123-decoder": "1.0.3",
+    "pngjs": "7.0.0"
   },
   "devDependencies": {
     "@types/bun": "latest",
+    "@types/pngjs": "6.0.5",
     "typescript": "^5.0.0"
   }
 }
