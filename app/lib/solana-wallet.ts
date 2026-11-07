@@ -50,13 +50,15 @@ export async function createSolanaPaymentSigner(): Promise<TransactionPartialSig
           scope: SOLANA_MAINNET,
           request: {
             method: 'signTransaction',
-            params: { account: { address: account }, transaction: getBase64EncodedWireTransaction(transaction) },
+            // MetaMask requires the chain inside params as well as the outer envelope.
+            // https://github.com/MetaMask/solana-wallet-standard/blob/main/src/wallet.ts
+            params: { account: { address: account }, transaction: getBase64EncodedWireTransaction(transaction), scope: SOLANA_MAINNET },
           },
         });
-        if (!response || typeof response !== 'object' || Array.isArray(response) || typeof response.transaction !== 'string') {
+        if (!response || typeof response !== 'object' || Array.isArray(response) || typeof response.signedTransaction !== 'string') {
           throw new Error('MetaMask returned an invalid signed transaction');
         }
-        const signed = getTransactionDecoder().decode(Buffer.from(response.transaction, 'base64'));
+        const signed = getTransactionDecoder().decode(Buffer.from(response.signedTransaction, 'base64'));
         if (!Buffer.from(signed.messageBytes).equals(Buffer.from(transaction.messageBytes))) {
           throw new Error('MetaMask changed the payment transaction');
         }
