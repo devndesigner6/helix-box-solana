@@ -40,17 +40,9 @@ export default function WorkspaceScreen() {
   const showConnectionNotice = status === "connecting" || isReconnecting || interactionBlockReason !== null;
   const pendingCode = typeof code === "string" ? code : null;
   const paidCode = pendingCode ?? sessionCode;
-  const [externalPaidUntil, setExternalPaidUntil] = useState(0);
-  const [paymentStatusChecked, setPaymentStatusChecked] = useState(false);
-  const needsPaidSession = Boolean(paidCode) && (
-    sessionState === "expired" ||
-    (status === "disconnected" && sessionState === "idle")
-  ) && paymentStatusChecked && externalPaidUntil <= Date.now();
   const externalActivationRef = useRef<string | null>(null);
 
   useEffect(() => {
-    setExternalPaidUntil(0);
-    setPaymentStatusChecked(false);
     externalActivationRef.current = null;
   }, [paidCode]);
 
@@ -62,10 +54,7 @@ export default function WorkspaceScreen() {
       try {
         const remote = await getSessionPaymentStatus(paidCode);
         if (cancelled) return;
-        setPaymentStatusChecked(true);
-        if (!remote.paid) return;
-
-        setExternalPaidUntil(remote.paidUntil);
+        if (!remote.workspaceFree && !remote.paid) return;
         if (
           status !== "disconnected" ||
           (sessionState !== "idle" && sessionState !== "expired") ||
@@ -75,12 +64,10 @@ export default function WorkspaceScreen() {
         }
 
         externalActivationRef.current = paidCode;
-        // Re-assemble from the pairing code so an external payment can renew
-        // an expired local password instead of trying the stale resume token.
+        // Reuse the pairing code rather than asking for another workspace payment.
         await connect(paidCode);
       } catch (cause) {
         if (!cancelled) {
-          setPaymentStatusChecked(true);
           logger.warn("workspace", "external payment status check failed", {
             code: paidCode,
             error: cause instanceof Error ? cause.message : String(cause),
@@ -96,9 +83,6 @@ export default function WorkspaceScreen() {
       clearInterval(interval);
     };
   }, [connect, getSessionPaymentStatus, paidCode, sessionState, status]);
-  const startPaidSession = () => {
-    if (paidCode) router.push({ pathname: "/payment", params: { code: paidCode } });
-  };
 
   const handleGoHome = useCallback(() => {
     logger.info("workspace", "navigating back to auth after disconnect");
@@ -319,37 +303,6 @@ export default function WorkspaceScreen() {
                 ? t('workspace.waitingConnection')
                 : t('workspace.restoringSession')}
             </Text>
-        </View>
-      ) : null}
-      {needsPaidSession && paidCode ? (
-        <View
-          style={{
-            position: "absolute",
-            left: 16,
-            right: 16,
-            bottom: bottomBarHeight + 16,
-            backgroundColor: colors.bg.raised,
-            borderRadius: 16,
-            borderWidth: 1,
-            borderColor: colors.border.main,
-            padding: 16,
-            gap: 10,
-          }}
-        >
-          <Text style={{ color: colors.fg.default, fontFamily: fonts.sans.semibold, fontSize: 16 }}>
-            {sessionState === "expired" ? "Your 1-hour agent session ended" : "Start your first agent session"}
-          </Text>
-          <Text style={{ color: colors.fg.muted, fontFamily: fonts.sans.regular, fontSize: 13, lineHeight: 19 }}>
-            {sessionState === "expired" ? "Pay $0.25 USDC to start another 1-hour agent session, or choose $2 USDC for 7 days." : "Approve your session payment in MetaMask on Solana. Choose $0.25 USDC for 1 hour or $2 USDC for 7 days."}
-          </Text>
-          <Pressable
-            onPress={startPaidSession}
-            style={{ backgroundColor: colors.accent.default, borderRadius: 10, paddingVertical: 12, paddingHorizontal: 14 }}
-          >
-            <Text style={{ color: colors.fg.default, fontFamily: fonts.sans.semibold, fontSize: 14, textAlign: "center" }}>
-              {sessionState === "expired" ? "Renew access" : "Pay and start agent session"}
-            </Text>
-          </Pressable>
         </View>
       ) : null}
     </View>

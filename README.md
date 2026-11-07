@@ -6,14 +6,14 @@
 <p align="center"><strong>Build, run, and ship directly from your phone.</strong></p>
 <p align="center">HelixBox brings your existing laptop development environment to mobile, including files, terminals, Git, processes, and AI coding agents.</p>
 
-This repository contains the Solana migration of the existing HelixBox workspace. The IDE predates this migration; the new work here is native Solana wallet approval and x402 session billing.
+This repository contains the Solana version of the existing HelixBox workspace. The IDE predates this migration. The current change replaces timed access with free workspace/own-CLI access and optional x402-paid model calls. This change is not yet a public payment release.
 
 <p align="center">
   <a href="https://helixboxide.xyz/"><b>Website</b></a>
   &nbsp;•&nbsp;
   <a href="#quick-start"><b>Quick Start</b></a>
   &nbsp;•&nbsp;
-  <a href="#x402-agent-sessions"><b>x402 Sessions</b></a>
+  <a href="#x402-model-tools"><b>x402 Model Tools</b></a>
   &nbsp;•&nbsp;
   <a href="https://github.com/devndesigner6/helix-box-solana/releases"><b>Latest Release</b></a>
 </p>
@@ -100,24 +100,28 @@ npx helixbox-cli
 
 <br />
 
-## x402 Agent Sessions
+## x402 Model Tools
 
-Workspace pairing, file inspection, logs, Git status, and basic controls remain free. Solana x402 payment integration is in development and has not yet been verified end to end.
+Pairing, workspace tools and the coding agents installed/authenticated on your laptop are free. Their own subscriptions and API charges remain separate. The previous `$0.25/hour` and `$2/week` gate is retired in this source version; old payment deep links open Model tools without requesting another access payment.
 
-| Access | Price | Includes |
-|--------|-------|----------|
-| Agent session | `$0.25 USDC` | One hour of agent access |
-| Developer pass | `$2 USDC` | Seven days with fair-use limits |
+Open **AI menu → Model tools** or **Settings → Wallet → Open model tools**. The app fetches live chat, image and speech catalogs, requests a bounded quote and opens MetaMask only after you approve that quote. After verified x402 settlement, the existing manager calls the actual upstream provider and stores the result for authenticated recovery. The provider key stays on the backend.
+
+- Chat uses a bounded prompt and output-token limit.
+- Images require verified per-image pricing, a single output and supported PNG output. Token/megapixel/tiered prices without a proven bound are declined.
+- Speech uses a model's live voice list and bounded text. Unbounded duration-based prices are declined.
+- Quotes last two minutes, use integer USDC amounts, include a 20% service margin, and have a disclosed 0.001 USDC minimum and 1 USDC maximum. These are fixed bounded-call prices, not exact token-usage charges. Listing a model does not guarantee that a safe quote is available.
 
 **Network:** Solana Mainnet<br>
 **Settlement asset:** USDC<br>
 **Mainnet `payTo`:** `7sbe2WLBQxJCBmPfL2xsy7WiFzjMS147R1DUK7LHwxyy`
 
-The app requests a session from the manager, receives an HTTP 402 payment requirement, and opens MetaMask for approval. The wallet signs the Solana USDC transaction; the x402 facilitator verifies and settles it. Only a successful settlement receipt can activate access. There is no separate checkout website, and HelixBox never needs your recovery phrase or private key.
+The wallet signs a USDC transaction, not a login or unlimited token approval. The app checks the network, asset, recipient, exact quoted amount and purchase identity. There is no checkout website and no request for your recovery phrase or wallet private key.
 
-The client checks the network, USDC mint, recipient and amount before requesting a signature. The manager records settlement receipts in SQLite so a repeated receipt cannot extend access or activate a different pairing code. **This is a test-build migration, not a public payment launch:** automatic recovery after an interrupted settlement is not implemented yet, and physical-device wallet behavior still needs end-to-end verification. Keep public paid access disabled until those release checks are complete. These sessions do not yet let agents autonomously purchase external services.
+Purchases use durable identities, ownership checks, encrypted input/results, unique transaction fingerprints and settlement receipts. A completed call is retrieved rather than executed again. Uncertain settlement or provider execution is held for reconciliation, not automatically retried. Prompts/results expire after 24 hours; receipt metadata is retained.
 
-These prices cover HelixBox agent access, not unlimited model tokens. Each coding agent uses the laptop's installed CLI and its own provider authentication, subscription or API billing. Provider charges are separate. The built-in API client is available; a separate `$0.10 USDC` paid API-testing flow is planned, not live.
+**Release gate:** model purchases default to disabled. The live catalog has been checked against the real public APIs; no fallback/demo catalog or canned generation is used. Paid upstream generation, the full phone payment-return flow, durable deployment/restart, reconciliation and refunds still need live verification. Failed paid calls are marked `refund_due`; automatic refunds are not implemented. Do not enable public payments before these checks. Restricted agent signing, spending mandates, autonomous Codex/Claude purchases and channel close/refund are not yet implemented. Wallet-per-call is the first verification slice, not a claim of autonomous agent payments.
+
+The built-in manual API client stays free. Paid API testing is outside this change.
 
 <br />
 
@@ -129,7 +133,9 @@ This repository reuses the existing manager and proxy URLs. **The existing manag
 
 Use [manager/.env.example](manager/.env.example) for Solana network, native USDC, receiving address and facilitator settings. Keep `MANAGER_ADMIN_PASSWORD` secret and set `MANAGER_DB_PATH` to the existing durable disk location. Confirm the receiving wallet's USDC associated token account before testing settlement. No server-side wallet private key is required.
 
-- Pairing codes with a seven-day lifetime, separate from paid agent-access expiry
+For model tools, also set `OPENROUTER_API_KEY` to a funded backend-only key and `MODEL_DATA_KEY` to a stable random secret of at least 32 characters. Set `MODEL_STORAGE_MOUNT` to the existing Render persistent disk mount that contains `MANAGER_DB_PATH`. The manager verifies the canonical file location and actual dedicated Linux block-filesystem mount; an ephemeral filename is not enough. Deployment/restart persistence still needs a real deployment check. Changing the data key makes existing encrypted inputs/results unreadable. Keep `MODEL_ENABLE_PAYMENTS=false` until the release gate above is verified. Never put either secret in `EXPO_PUBLIC_*` variables, the app bundle, agent prompts or Git. Manager `--new` refuses to erase a database containing purchase or payment-receipt records. See [the model-tools design](docs/MODEL_CATALOG_DESIGN.md) and [implementation ledger](tasks/model-tools-progress.md) for scope and remaining work.
+
+- Pairing codes with a seven-day lifetime, separate from model purchase identity
 - Dual-channel architecture (control + data)
 - QR code pairing
 

@@ -15,6 +15,7 @@ export interface AssembleSessionStatus {
   expiresAt: number;
   appConnected: boolean;
   cliConnected: boolean;
+  workspaceFree: true;
 }
 
 export function buildAssembleSessionStatus(
@@ -29,7 +30,17 @@ export function buildAssembleSessionStatus(
     expiresAt: session.expiresAt,
     appConnected: Boolean(session.appWs),
     cliConnected: Boolean(session.cliWs),
+    workspaceFree: true,
   };
+}
+
+export function workspaceCredential(
+  session: { password: string | null; expiresAt: number },
+  createPassword: () => string,
+  now = Date.now(),
+): { password: string; expiresAt: number } | null {
+  if (!Number.isFinite(session.expiresAt) || session.expiresAt <= now) return null;
+  return { password: session.password || createPassword(), expiresAt: session.expiresAt };
 }
 
 export function createAssembledPayload(

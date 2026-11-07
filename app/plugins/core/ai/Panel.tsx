@@ -1,4 +1,5 @@
 import Header, { BaseTab, useHeaderHeight } from "@/components/Header";
+import { router } from "expo-router";
 import { useTranslation } from "react-i18next";
 import i18n from "@/lib/i18n";
 import InfoSheet from "@/components/InfoSheet";
@@ -4881,6 +4882,10 @@ const selectedModelNameFull = modelOptions.find((m) => m.id === selectedModel)?.
               shouldOpenOnLongPress={false}
               preferredMenuAnchorPosition="bottom"
               onPressAction={({ nativeEvent }) => {
+                if (nativeEvent.event === "model-tools") {
+                  router.push('/models');
+                  return;
+                }
                 if (nativeEvent.event === "toggle-detailed-view") {
                   handleDetailedViewAction();
                   return;
@@ -4890,6 +4895,7 @@ const selectedModelNameFull = modelOptions.find((m) => m.id === selectedModel)?.
                 }
               }}
               actions={[
+                { id: "model-tools", title: "Model tools" },
                 {
                   id: "toggle-detailed-view",
                   title: t('aiPanel.menuToggleView'),

@@ -108,6 +108,8 @@ export interface SessionPaymentStatus {
   expiresAt?: number;
   appConnected?: boolean;
   cliConnected?: boolean;
+  workspaceFree?: boolean;
+  error?: string;
 }
 
 interface ConnectionContextType {
@@ -977,10 +979,12 @@ export function ConnectionProvider({ children }: { children: React.ReactNode }) 
     return await new Promise<AssembleResult>((resolve, reject) => {
       const ws = new WebSocket(wsUrl);
       let settled = false;
+      let timeout: ReturnType<typeof setTimeout> | null = null;
 
       const fail = (error: Error) => {
         if (settled) return;
         settled = true;
+        if (timeout) clearTimeout(timeout);
         logger.warn('connection', 'assemble websocket failed', {
           code,
           wsUrl,
@@ -993,6 +997,7 @@ export function ConnectionProvider({ children }: { children: React.ReactNode }) 
         }
         reject(error);
       };
+      timeout = setTimeout(() => fail(new Error('Workspace pairing timed out. Keep the CLI running and try reconnecting.')), 30000);
 
       ws.onopen = () => {
         logger.info('connection', 'assemble websocket opened', {
@@ -1017,6 +1022,7 @@ export function ConnectionProvider({ children }: { children: React.ReactNode }) 
           }
           if (settled) return;
           settled = true;
+          if (timeout) clearTimeout(timeout);
           ws.send(JSON.stringify({ type: 'ack' }));
           logger.info('connection', 'assemble websocket completed', {
             code,
@@ -1024,6 +1030,7 @@ export function ConnectionProvider({ children }: { children: React.ReactNode }) 
             assembledCode: parsed.code,
           });
           resolve({ code: parsed.code, password: parsed.password });
+          ws.close(1000, 'assembled');
         } catch (error) {
           fail(error instanceof Error ? error : new Error(String(error)));
         }
@@ -1079,6 +1086,7 @@ export function ConnectionProvider({ children }: { children: React.ReactNode }) 
       expiresAt: typeof payload.expiresAt === 'number' ? payload.expiresAt : undefined,
       appConnected: payload.appConnected === true,
       cliConnected: payload.cliConnected === true,
+      workspaceFree: payload.workspaceFree === true,
     };
   }, []);
 
@@ -1459,6 +1467,10 @@ export function ConnectionProvider({ children }: { children: React.ReactNode }) 
       logger.info('connection', 'resolved resume gateways', { gateways: gatewaysRef.current });
     } catch (err) {
       const msg = err instanceof Error ? err.message : 'Resume failed';
+      if (err instanceof ProxyLookupError && (err.status === 404 || err.status === 402) && stored.sessionCode) {
+        await connect(stored.sessionCode);
+        return;
+      }
       logger.error('connection', 'manager proxy lookup failed', { error: msg });
       setSessionState(err instanceof ProxyLookupError && (err.status === 404 || err.status === 402) ? 'expired' : 'ended');
       setStatus('error');
@@ -1488,7 +1500,7 @@ export function ConnectionProvider({ children }: { children: React.ReactNode }) 
       setError(lastError.message);
       throw lastError;
     }
-  }, [claimReattach, cleanupSockets, connectToGatewayV2]);
+  }, [claimReattach, cleanupSockets, connectToGatewayV2, connect]);
 
   useEffect(() => {
     const sub = AppState.addEventListener('change', (nextState) => {

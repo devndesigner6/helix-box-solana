@@ -27,6 +27,7 @@ test("reports an externally paid session without requiring a wallet", () => {
     expiresAt: 10_000,
     appConnected: true,
     cliConnected: false,
+    workspaceFree: true,
   });
 });
 

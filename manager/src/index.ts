@@ -7,9 +7,11 @@ import {
   randomUUID,
   timingSafeEqual,
 } from "crypto";
-import { existsSync, rmSync } from "fs";
+import { existsSync, rmSync, readFileSync, realpathSync } from "fs";
+import { persistentModelStore, assertFinancialResetSafe } from './model-storage-safety.ts';
 import { createX402App } from "./x402-app.js";
 import { createPaymentReceiptStore } from "./payment-receipts.js";
+import { createModelApp } from "./model-app.ts";
 import {
   CLI_HOURLY_ROUTE,
   PREMIUM_WEEKLY_ROUTE,
@@ -20,6 +22,7 @@ import {
 import {
   buildAssembleSessionStatus,
   createAssembledPayload,
+  workspaceCredential,
 } from "./assemble-session.js";
 
 const CHARSET = "ABCDEFGHJKMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789";
@@ -616,6 +619,10 @@ function startManager(): void {
   const resetManagerState = process.argv.includes("--new");
 
   if (resetManagerState) {
+    if(existsSync(dbPath)) {
+      const previous=new Database(dbPath,{readonly:true});
+      try{assertFinancialResetSafe(previous);}finally{previous.close();}
+    }
     for (const path of [dbPath, `${dbPath}-wal`, `${dbPath}-shm`]) {
       if (!existsSync(path)) continue;
       rmSync(path, { force: true });
@@ -2035,14 +2042,10 @@ function startManager(): void {
   };
 
   const maybeIssueAssemblePassword = (session: AssembleSession): void => {
-    if (session.password) {
-      if (session.paidUntil > Date.now()) replayAssemblePassword(session);
-      return;
-    }
-    if (session.paidUntil <= Date.now()) return;
-    if (!session.appWs || !session.cliWs) return;
-
-    const password = makeV2Password();
+    if (!session.password && (!session.appWs || !session.cliWs)) return;
+    const credential = workspaceCredential(session, makeV2Password);
+    if (!credential) return;
+    const { password, expiresAt } = credential;
     const now = Date.now();
     const passwordHash = hashPassword(password);
     session.password = password;
@@ -2058,15 +2061,14 @@ function startManager(): void {
     issuedPasswordsByHash.set(passwordHash, {
       code: session.code,
       passwordHash,
-      proxyUrl: null,
+      proxyUrl: issuedPasswordsByHash.get(passwordHash)?.proxyUrl ?? null,
       issuedAt: now,
-      // The password is the entitlement. It must not outlive the paid plan.
-      expiresAt: session.paidUntil,
+      expiresAt,
     });
     upsertEntitlementStmt.run(
       passwordHash,
       session.code,
-      session.paidUntil,
+      expiresAt,
       now,
     );
 
@@ -3568,7 +3570,7 @@ function startManager(): void {
       redeemSession: redeemAssembleSession,
       sessionExists: (code) => Boolean(getExistingAssembleSession(code)),
     });
-    console.log("[x402] paid CLI relay endpoints enabled");
+    console.log("[x402] Solana payment configuration loaded; timed-access routes retired");
   } catch (error) {
     x402ConfigurationError =
       error instanceof Error ? error.message : "x402 configuration failed";
@@ -3577,7 +3579,30 @@ function startManager(): void {
     );
   }
 
+  let modelStorageVerified=false;
+  if(process.platform==='linux' && process.env.MODEL_STORAGE_MOUNT) {
+    try{modelStorageVerified=persistentModelStore(realpathSync(dbPath),realpathSync(process.env.MODEL_STORAGE_MOUNT),readFileSync('/proc/self/mountinfo','utf8'));}
+    catch{ /* A missing/unverified disk keeps real payments disabled. */ }
+  }
+  const modelApp = createModelApp({
+    db,
+    apiKey: process.env.OPENROUTER_API_KEY || '',
+    dataKey: (process.env.MODEL_DATA_KEY || '').length >= 32 ? process.env.MODEL_DATA_KEY! : '',
+    config: x402PaymentConfig,
+    enabled: process.env.MODEL_ENABLE_PAYMENTS === 'true',
+    durable: modelStorageVerified,
+    authenticate(request) {
+      const authorization = request.headers.get('authorization');
+      if (!authorization?.startsWith('Bearer ')) return null;
+      const password = authorization.slice(7);
+      if (password.length !== V2_PASSWORD_LENGTH) return null;
+      const owner = hashPassword(password);
+      return getIssuedRecord(owner) ? owner : null;
+    },
+  });
+
   setInterval(cleanupManagerSessions, 60 * 1000);
+  setInterval(()=>modelApp.cleanupModelData(),60 * 1000);
   setInterval(() => cleanupExpiredV2State(), 30 * 1000);
 
   Bun.serve<any>({
@@ -3590,13 +3615,22 @@ function startManager(): void {
         return new Response(null, { status: 204, headers: corsHeaders });
       }
 
+      if (path === '/v2/models' || path.startsWith('/v2/models/')) {
+        const target = new URL(req.url);
+        if (target.hostname === 'helixbox-manager.onrender.com') target.protocol = 'https:';
+        return modelApp.fetch(target.href === req.url ? req : new Request(target,req));
+      }
+
       if (path.startsWith("/v2/x402/")) {
+        if (path !== '/v2/x402/health') {
+          return Response.json({error:'Workspace access is free. Use the current app for per-call model tools.'},{status:410,headers:corsHeaders});
+        }
         if (path === "/v2/x402/health" && req.method === "GET") {
           return Response.json(
             x402App
               ? {
                   status: "ok",
-                  service: "HelixBox paid agent sessions",
+                  service: "HelixBox model payment configuration (not a release-readiness check)",
                   network: x402PaymentConfig?.network,
                 }
               : { status: "misconfigured", error: x402ConfigurationError },

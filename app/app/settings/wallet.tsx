@@ -35,6 +35,7 @@ export default function WalletSettingsPage() {
       <Pressable disabled={busy} onPress={connectWallet} style={{ backgroundColor: colors.accent.default, borderRadius: 10, padding: 12, opacity: busy ? .6 : 1 }}><Text style={{ color: colors.fg.default, fontFamily: fonts.sans.semibold, textAlign: "center" }}>{busy ? "Connecting MetaMask..." : wallet ? "Reconnect MetaMask" : "Connect MetaMask"}</Text></Pressable>
       {wallet ? <Pressable disabled={busy} onPress={disconnectWallet} style={{ backgroundColor: "#fa6838", borderRadius: 10, padding: 12, opacity: busy ? .6 : 1, marginTop: 10 }}><Text style={{ color: "#ffffff", fontFamily: fonts.sans.semibold, textAlign: "center" }}>{busy ? "Removing..." : "Forget Saved Wallet"}</Text></Pressable> : null}
       {error ? <Text style={{ color: colors.fg.muted, fontFamily: fonts.sans.regular, fontSize: 12 }}>{error}</Text> : null}
+      <Pressable accessibilityRole="button" onPress={() => router.push('/models')} style={{ padding: 12, borderRadius: 10, backgroundColor: colors.bg.base }}><Text style={{ color: colors.fg.default, fontFamily: fonts.sans.semibold }}>Open model tools</Text></Pressable>
     </View>
   </View>;
 }
