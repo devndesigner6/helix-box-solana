@@ -30,3 +30,11 @@ Final Android verification after recovery fixes passed: warm Hermes export produ
 
 Test deployment authorized 2026-11-07: owner approved pushing the first slice and updating the existing manager with payments disabled, then explicitly confirmed Render workspace My Workspace. The scoped env update merged only MODEL_ENABLE_PAYMENTS=false, without reading/displaying any API key or replacing other vars. Render accepted the change and started configuration deploy dep-dbnm151srm7s739qs0hg. Existing service uses helix-box-solana main with auto-deploy; proxy remains unchanged.
 Pre-push checks rerun: 33 manager tests, manager type check, and 11 focused app tests passed. Restored the AI panel's original mixed line-ending layout so its diff is exactly six added menu/import lines; git diff --check passes. No paid model generation or transfer authorized/performed.
+# Autonomous purchase completion, 2026-11-07
+
+- Explicit submission gates A-G now tracked in `tasks/todo.md`; no final APK/readiness claim until the actual agent flow is verified.
+- Added durable immutable mandate policy and atomic sequential reservations. Caps, allowlists, owner isolation, stop/expiry, replay and signed-but-uncertain recovery have focused tests. This store is not yet exposed as a live payment API and cannot by itself prove a funded channel.
+- Retained signed reservations survive restart. Manager reset protection now includes mandates and channel ledgers.
+- Canonical delegated channel-open builder passes byte-for-byte comparison with x402 2.30's own builder, plus separate-authorizer and reject-before-wallet checks. SQLite channel updates pass concurrent mutation/reconstruction tests. Thirteen focused checks pass; these are offline protocol checks, not a mainnet payment or phone test.
+- Owner approved upgrading the existing manager with a 1 GB disk up to US$10/month. Browser access timed out twice; no upgrade or charge was made.
+- Current production deployment remains a938445, live catalog is real and `MODEL_ENABLE_PAYMENTS=false`. Existing free Render service still needs durable storage before payments can be enabled.

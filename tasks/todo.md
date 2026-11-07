@@ -1,5 +1,20 @@
 # Migration checklist
 
+## Submission gate: autonomous model purchases (2026-11-07)
+
+Do not build the final APK or describe autonomous payments as complete until these gates pass. Existing wallet-per-call routes stay disabled on Render while this work is incomplete.
+
+- [x] Free workspace and installed Codex/Claude access; old hourly/week payment routes retired. Live catalog and wallet-per-call foundation deployed at a938445. This is not autonomous-payment proof.
+- [ ] A. Client-held delegation: phone generates an Ed25519 voucher key in secure storage. MetaMask approves only a bounded canonical Solana USDC channel deposit. Verify payer, delegate, merchant, mint, chain, deposit, instructions and signatures; never expose the payer key or give the backend voucher-signing authority.
+- [ ] B. Durable mandate policy: immutable model allowlist, per-call cap, total cap, maximum calls, expiry and stop. Reserve atomically, reject cross-owner/replayed requests, and keep uncertain charges reserved across restarts. Tests precede implementation.
+- [ ] C. Real x402 batch settlement: use installed SDK with SQLite-backed channel/operation stores, recoverable fulfillment, claim/distribute worker and cooperative/forced close handling. Deliver no fabricated receipts or successful generations.
+- [ ] D. Agent tools: the existing CLI exposes live catalog, quote, purchase/status tools to Codex and Claude. Tools submit requests; the paired foreground phone validates and signs within its mandate. Offline phone means paused purchases, not a server-wallet fallback. No unattended background execution claim.
+- [ ] E. Existing-style app controls: create/fund mandate, see remaining budget and pending/completed purchases, stop and close/refund; use actual catalog/prices and real result previews. No marketplace or landing redesign.
+- [ ] F. Production prerequisites: approve persistent storage on the existing manager, preserve the stable encryption key, verify funded provider account and live facilitator support. Do not enable payments on an ephemeral database.
+- [ ] G. Release proof: policy/concurrency/replay/restart tests; full manager and CLI checks; Android export; physical-device QR and wallet return; two approved real model purchases without a second wallet prompt; stop/cap rejection and close/refund. Only then hand over the EAS preview command.
+
+Scope reaches manager model routes/storage/worker/config/tests, app signing/storage/model hooks/screens/tests, CLI agent tool registration/tests, README and this checklist. Original lunel checkout, existing proxy, marketplace, Hermes and unrelated landing changes are excluded. A security-sensitive external SDK/program mismatch is a blocker, not a reason to substitute a mock.
+
 ## Paid model tools (design approved, implementation in progress)
 
 This is an extension of the current plan, not a claim that the older unchecked work is complete. Proposed file names below are implementation choices, not existing modules.

@@ -13,7 +13,7 @@ export function persistentModelStore(file:string,mount:string,mountInfo:string):
   });
 }
 export function assertFinancialResetSafe(db:Database):void {
-  for(const table of ['model_purchases','solana_payment_receipts']) {
+  for(const table of ['model_purchases','solana_payment_receipts','model_mandates','model_mandate_reservations','model_channels']) {
     if(!db.query("SELECT name FROM sqlite_master WHERE type='table' AND name=?").get(table))continue;
     if(db.query(`SELECT 1 FROM ${table} LIMIT 1`).get())throw new Error('Refusing --new: this database contains a financial ledger. Preserve its receipts and backups.');
   }

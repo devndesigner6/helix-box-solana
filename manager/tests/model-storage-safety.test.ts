@@ -12,3 +12,9 @@ test('routine manager reset must never erase a financial ledger',()=>{
   db.run("INSERT INTO model_purchases VALUES('paid','completed')");
   expect(()=>assertFinancialResetSafe(db)).toThrow(/ledger/);
 });
+test('reset also refuses a funded mandate or retained channel voucher',()=>{
+  for(const table of ['model_mandates','model_mandate_reservations','model_channels']) {
+    const db=new Database(':memory:');db.run(`CREATE TABLE ${table}(id TEXT)`);db.run(`INSERT INTO ${table} VALUES ('retained')`);
+    expect(()=>assertFinancialResetSafe(db)).toThrow(/ledger/);
+  }
+});
