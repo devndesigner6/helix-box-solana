@@ -4,30 +4,17 @@
   </a>
 </div><br />
 <p align="center"><strong>Build, run, and ship directly from your phone.</strong></p>
-<p align="center">HelixBox brings your existing laptop development environment to mobile, including files, terminals, Git, processes, and AI coding agents.</p>
+<p align="center">HelixBox connects your phone to your laptop's development environment: files, terminal, Git, app previews and AI coding agents.</p>
 
-This repository contains the Solana version of the existing HelixBox workspace. The IDE predates this migration. This version replaces timed access with free workspace/own-CLI access and optional x402-paid model calls. Payments remain an experimental Android beta.
-
-<p align="center">
-  <a href="https://helixbox.vercel.app/"><b>Website</b></a>
-  &nbsp;•&nbsp;
-  <a href="https://youtu.be/KXF1TQKWFDM"><b>Watch the Solana Demo</b></a>
-  &nbsp;•&nbsp;
-  <a href="#quick-start"><b>Quick Start</b></a>
-  &nbsp;•&nbsp;
-  <a href="#x402-model-tools"><b>x402 Model Tools</b></a>
-  &nbsp;•&nbsp;
-  <a href="https://github.com/devndesigner6/helix-box-solana/releases"><b>Latest Release</b></a>
-</p>
 <p align="center">
   <a href="https://helixbox.vercel.app/"><img src="https://img.shields.io/badge/Open_HelixBox-4F46E5?style=for-the-badge" alt="Open HelixBox"></a>
   &nbsp;•&nbsp;
-  <a href="https://github.com/devndesigner6/helix-box-solana/releases"><img src="https://img.shields.io/badge/Download_Android-black?style=for-the-badge&logo=android" alt="Download Android release"></a>
+  <a href="https://github.com/devndesigner6/helix-box-solana/releases/tag/v1-solana-beta.1"><img src="https://img.shields.io/badge/Download_Android-black?style=for-the-badge&logo=android" alt="Download Android release"></a>
   &nbsp;•&nbsp;
-  <a href="https://github.com/devndesigner6/helix-box-solana/issues"><img src="https://img.shields.io/badge/Report_Bug-black?style=for-the-badge" alt="Report Bug"></a>
+  <a href="https://github.com/devndesigner6/helix-box-solana"><img src="https://img.shields.io/badge/GitHub-black?style=for-the-badge&logo=github" alt="GitHub repository"></a>
 </p>
 
-## Solana demo
+## Demo
 
 [![Watch HelixBox: mobile coding agents and Solana x402 model payments](https://i.ytimg.com/vi/KXF1TQKWFDM/hqdefault.jpg)](https://youtu.be/KXF1TQKWFDM)
 
@@ -63,7 +50,7 @@ This repository contains the Solana version of the existing HelixBox workspace. 
 npx helixbox-cli
 ```
 
-2. Build this Solana version with the Expo command below, install the APK, then scan the pairing QR code. Published APKs will appear in [this repository's Releases](https://github.com/devndesigner6/helix-box-solana/releases); do not use the older payment version's APK for Solana testing.
+2. Install the [Android APK](https://github.com/devndesigner6/helix-box-solana/releases/download/v1-solana-beta.1/HelixBox-Solana.apk), then scan the pairing QR code.
 3. Resume your workspace to access its files, terminal, Git state, processes, and available AI agents.
 
 For an existing connection, resume from app launch or **Past Sessions**. A valid saved session returns to the same workspace; the laptop CLI must still be running and reachable. Use `npx helixbox-cli --new` when you intentionally want a fresh pairing QR code.
@@ -110,30 +97,37 @@ npx helixbox-cli
 
 ## x402 Model Tools
 
-Pairing, workspace tools and the coding agents installed/authenticated on your laptop are free. Their own subscriptions and API charges remain separate. The previous `$0.25/hour` and `$2/week` gate is retired in this source version; old payment deep links open Model tools without requesting another access payment.
+Pairing, workspace tools and access to coding agents installed on your laptop are free. The agents use their own provider authentication; their subscriptions and API charges remain separate.
 
-Open **AI menu → Model tools** or **Settings → Wallet → Open model tools**. The app fetches live chat, image and speech catalogs and requests a bounded quote. For agent purchases, approve a model allowlist, per-call/total limits, maximum calls and expiry. MetaMask signs a bounded USDC channel deposit; a separate phone-held key authorizes subsequent calls within those limits. The provider key stays on the backend.
+When a task needs another model, Codex or Claude Code can discover it, request a quote and buy the result through x402 on Solana. Model tools include live chat, image and speech catalogs. A catalog entry must pass availability and bounded-pricing checks before it can be purchased.
 
-The x402 authorization flow verifies the payment proof first. The manager generates and encrypts a complete result before settling the charge, and releases the result only after settlement is acknowledged. A failed or incomplete generation cancels the charge rather than creating a new refund debt. An uncertain settlement holds the original purchase for reconciliation instead of charging or generating again.
+Open **AI menu → Model tools** or **Settings → Wallet → Open model tools**:
 
-- Chat uses a bounded prompt and output-token limit.
-- Images require verified per-image pricing, a single output and supported PNG output. Token/megapixel/tiered prices without a proven bound are declined.
-- Speech uses a model's live voice list and bounded text. Unbounded duration-based prices are declined.
-- Quotes last two minutes, use integer USDC amounts, include a 20% service margin, and have a disclosed 0.001 USDC minimum and 1 USDC maximum. These are fixed bounded-call prices, not exact token-usage charges. Listing a model does not guarantee that a safe quote is available.
+1. Connect MetaMask and choose the models your agent may use.
+2. Set a total budget, per-call cap, maximum calls and expiry.
+3. Approve the first quoted call and bounded USDC channel deposit in MetaMask.
+4. Keep the phone foregrounded. A separate phone-held key signs subsequent calls within your limits, without another wallet approval for every request.
+
+The provider key stays on the backend, and your wallet's private key is never given to the coding agent. A complete result is prepared and encrypted before its charge is accepted. The result is released after payment acknowledgement; cumulative channel usage is redeemed and paid out on-chain in batches. A completed call and an on-chain payout are separate steps.
+
+| Access | Price |
+|--------|-------|
+| Workspace and installed coding agents | Free HelixBox access; provider charges remain separate |
+| Optional model calls | Quoted per bounded request, from 0.001 to 1 USDC |
+
+Quotes expire after two minutes and include a 20% service margin. Chat calls have prompt and output limits. Images require bounded per-image pricing and supported PNG output; speech requires bounded text pricing. Calls without a verified price bound are declined.
 
 **Network:** Solana Mainnet<br>
 **Settlement asset:** USDC<br>
 **Mainnet `payTo`:** `7sbe2WLBQxJCBmPfL2xsy7WiFzjMS147R1DUK7LHwxyy`
 
-The wallet signs a USDC transaction, not a login or unlimited token approval. The app checks the network, asset, recipient, exact quoted amount and purchase identity. There is no checkout website and no request for your recovery phrase or wallet private key.
+MetaMask signs the funding transaction in the wallet app. There is no checkout website and no request for your recovery phrase. The app validates the network, asset, recipient, amount and purchase identity before signing.
 
 Purchases use durable identities, ownership checks, encrypted input/results, unique transaction fingerprints and settlement receipts. A completed call is retrieved rather than executed again. Uncertain settlement or provider execution is held for reconciliation, not automatically retried. Prompts/results expire after 24 hours; receipt metadata is retained.
 
-**Release gate:** model purchases default to disabled. This working branch now includes phone-held Ed25519 voucher keys, capped x402 channels, mandate controls, Codex dynamic tools and Claude MCP tools. The real SDK/cryptography integration test covers two calls against external-service fixtures, not a mainnet payment. Mandates authorize all coding tasks in the paired workspace, not separate budgets per chat. The phone must remain foregrounded to authorize new calls.
+**Payment beta:** start with a small budget. Real Android/mainnet model purchases have been exercised; the demo is linked above. Mandates apply across the paired workspace, not per chat. Keep the phone-held signing key on the device and the app foregrounded for new authorizations. Stop blocks new purchases; returning unused escrow requires the channel-close/refund flow. It does not refund previously charged purchases. See the [implementation ledger](tasks/model-tools-progress.md) for checks and remaining work.
 
-Deployment and physical-device/mainnet verification are still required before calling this a public payment release. The automated tests use external-service fixtures; production uses the real provider and facilitator. New failed calls are not charged. Historical `refund_due` records from the previous charge-first implementation still require operator reconciliation; a channel close returns unspent escrow, not a refund of a previously charged purchase. The phone must keep its signing key and remain foregrounded for new agent authorizations.
-
-The built-in manual API client stays free. Paid API testing is outside this change.
+The built-in manual API client stays free.
 
 <br />
 
@@ -141,15 +135,13 @@ The built-in manual API client stays free. Paid API testing is outside this chan
 
 Bun-based WebSocket service that connects the CLI and app using session codes. The public manager is deployed at [helixbox-manager.onrender.com](https://helixbox-manager.onrender.com).
 
-This repository reuses the existing manager and proxy URLs. **The existing manager service must deploy the updated `manager/` code as well as the new environment values. Changing environment variables alone does not migrate the backend.** No separate backend deployment is required. The proxy can remain unchanged.
+Use [manager/.env.example](manager/.env.example) for network, USDC, receiving-address and facilitator settings. Workspace sessions use SQLite; model purchases, mandates, channels and hashed ownership credentials use the private Neon `DATABASE_URL`. Payment storage must be durable. No server-side payer wallet private key is required.
 
-Use [manager/.env.example](manager/.env.example) for Solana network, native USDC, receiving address and facilitator settings. Keep `MANAGER_ADMIN_PASSWORD` secret. `MANAGER_DB_PATH` remains the existing workspace SQLite location; model purchases, mandates, channel receipts and hashed workspace ownership use the private Neon `DATABASE_URL`. Confirm the receiving wallet's USDC associated token account before testing settlement. No server-side payer wallet private key is required.
+Model tools need a funded backend-only `OPENROUTER_API_KEY` and a stable `MODEL_DATA_KEY` of at least 32 characters. Back up the data key: it encrypts retained results and derives the merchant's channel-close authorizer. Keep admin credentials, provider keys and `DATABASE_URL` out of `EXPO_PUBLIC_*`, agent prompts and Git. For self-hosting, keep `MODEL_ENABLE_PAYMENTS=false` until storage, configuration and payment checks pass.
 
-For model tools, set `OPENROUTER_API_KEY` to a funded backend-only key and `MODEL_DATA_KEY` to a stable random secret of at least 32 characters. Keep a secure backup of that data key: it encrypts retained results and derives the merchant's channel-close authorizer. A stored key fingerprint rejects an accidental key change. Keep `MODEL_ENABLE_PAYMENTS=false` until deployment/configuration checks pass. Never put either secret or `DATABASE_URL` in `EXPO_PUBLIC_*`, agent prompts or Git. See [the model-tools design](docs/MODEL_CATALOG_DESIGN.md) and [implementation ledger](tasks/model-tools-progress.md) for verification and remaining work.
+Read the [model-tools design](docs/MODEL_CATALOG_DESIGN.md) and [handbook](docs/HANDBOOK.md) for configuration, recovery and deployment details.
 
-No paid Render upgrade is required. The manager uses Bun's PostgreSQL driver with certificate verification and parameterized queries, checks real schema/write permissions at startup, and fails closed if the configured database cannot initialize. Legacy local model records are copied without overwriting newer database records. A dedicated persistent SQLite disk remains an alternative for operators who already have one; an ephemeral directory does not satisfy payment durability.
-
-Use CLI **0.2.0 or newer** for the agent model tools. From the project you want to pair, run `npx helixbox-cli@latest --new` and scan its QR with the updated Android app. The CLI exposes live catalog, mandate, quote, purchase and status tools to Codex and Claude. Image/audio results are saved under `.helixbox-model-results/` in that project. For local development, run `npm ci` and `npm run build` in `cli/` instead.
+Use CLI **0.2.0 or newer** for agent model tools. The CLI exposes catalog, mandate, quote, purchase and status tools to Codex and Claude Code. Image/audio results are saved under `.helixbox-model-results/` in the project. For CLI development, run `npm ci` and `npm run build` in `cli/`.
 
 - Pairing codes with a seven-day lifetime, separate from model purchase identity
 - Dual-channel architecture (control + data)
@@ -181,15 +173,15 @@ HelixBox supports Codex, OpenCode, Claude Code, and Hermes when their CLIs are i
 
 Read the [HelixBox handbook](docs/HANDBOOK.md) for setup, workspace tools, agents, payments, development, Android builds and troubleshooting.
 
-To build the Android test APK in Expo's cloud from Windows CMD:
+To build an Android APK in Expo's cloud, run from the repository root:
 
 ```cmd
-cd /d "C:\Users\hp\open ai hack\helixbox-solana\app"
+cd app
 npm ci --legacy-peer-deps
 npx eas-cli build --platform android --profile preview
 ```
 
-The existing Expo project and signing setup are retained. Set the public manager and proxy URLs in EAS if they differ from [app/.env.example](app/.env.example). OTA updates are disabled unless a separate Solana-only update endpoint is explicitly configured. A successful JavaScript export is not proof of a successful native APK build or real wallet payment.
+Set the public manager and proxy URLs in EAS using [app/.env.example](app/.env.example). OTA updates are disabled unless a Solana-only update endpoint is explicitly configured. Native builds and wallet flows need device testing separately from JavaScript export checks.
 
 <br />
 
