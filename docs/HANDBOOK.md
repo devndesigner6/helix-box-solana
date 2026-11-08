@@ -6,6 +6,8 @@ The phone gives you access to them while you are away from your desk.
 
 ## Get started
 
+Watch the [Solana demo](https://youtu.be/KXF1TQKWFDM) or visit the [Solana website](https://helixbox.vercel.app/) for a walkthrough of the workspace and agent model payments.
+
 1. Install the Android app from [GitHub Releases](https://github.com/devndesigner6/helix-box-solana/releases).
 2. Open a terminal in the project you want to work on.
 3. Run `npx helixbox-cli` and scan the QR code with HelixBox.

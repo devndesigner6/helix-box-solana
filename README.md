@@ -1,15 +1,17 @@
 <div align="center">
-  <a href="https://helixboxide.xyz/">
+  <a href="https://helixbox.vercel.app/">
     <img src="landing/public/assets/images/helixbox-readme.png" alt="Helix Box" width="600">
   </a>
 </div><br />
 <p align="center"><strong>Build, run, and ship directly from your phone.</strong></p>
 <p align="center">HelixBox brings your existing laptop development environment to mobile, including files, terminals, Git, processes, and AI coding agents.</p>
 
-This repository contains the Solana version of the existing HelixBox workspace. The IDE predates this migration. The current change replaces timed access with free workspace/own-CLI access and optional x402-paid model calls. This change is not yet a public payment release.
+This repository contains the Solana version of the existing HelixBox workspace. The IDE predates this migration. This version replaces timed access with free workspace/own-CLI access and optional x402-paid model calls. Payments remain an experimental Android beta.
 
 <p align="center">
-  <a href="https://helixboxide.xyz/"><b>Website</b></a>
+  <a href="https://helixbox.vercel.app/"><b>Website</b></a>
+  &nbsp;•&nbsp;
+  <a href="https://youtu.be/KXF1TQKWFDM"><b>Watch the Solana Demo</b></a>
   &nbsp;•&nbsp;
   <a href="#quick-start"><b>Quick Start</b></a>
   &nbsp;•&nbsp;
@@ -18,12 +20,18 @@ This repository contains the Solana version of the existing HelixBox workspace. 
   <a href="https://github.com/devndesigner6/helix-box-solana/releases"><b>Latest Release</b></a>
 </p>
 <p align="center">
-  <a href="https://helixboxide.xyz/"><img src="https://img.shields.io/badge/Open_HelixBox-4F46E5?style=for-the-badge" alt="Open HelixBox"></a>
+  <a href="https://helixbox.vercel.app/"><img src="https://img.shields.io/badge/Open_HelixBox-4F46E5?style=for-the-badge" alt="Open HelixBox"></a>
   &nbsp;•&nbsp;
   <a href="https://github.com/devndesigner6/helix-box-solana/releases"><img src="https://img.shields.io/badge/Download_Android-black?style=for-the-badge&logo=android" alt="Download Android release"></a>
   &nbsp;•&nbsp;
   <a href="https://github.com/devndesigner6/helix-box-solana/issues"><img src="https://img.shields.io/badge/Report_Bug-black?style=for-the-badge" alt="Report Bug"></a>
 </p>
+
+## Solana demo
+
+[![Watch HelixBox: mobile coding agents and Solana x402 model payments](https://i.ytimg.com/vi/KXF1TQKWFDM/hqdefault.jpg)](https://youtu.be/KXF1TQKWFDM)
+
+[Watch the walkthrough on YouTube](https://youtu.be/KXF1TQKWFDM): laptop pairing, the mobile workspace and bounded agent model purchases using USDC on Solana.
 
 <p align="center">
   <img src="app/assets/images/onboarding/1/left.png" alt="HelixBox mobile terminal" width="180">
