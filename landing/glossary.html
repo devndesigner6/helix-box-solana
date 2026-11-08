@@ -67,7 +67,8 @@
       <div class="preface-grid">
         <div class="preface-eyebrow">Definitions</div>
         <div class="preface-body">
-          <p><strong>x402</strong><br>A payment protocol based on HTTP payment requirements. HelixBox uses it with USDC on Solana Mainnet for bounded model calls. A complete result is prepared before its charge settles and released after acknowledgement.</p>
+          <p><strong>x402</strong><br>A payment protocol based on HTTP payment requirements. HelixBox uses it with USDC on Solana Mainnet for bounded model calls. A complete result is prepared before charging and released after payment acknowledgement. Channel commitments and on-chain payouts are separate steps.</p>
+          <p><strong>Payment channel</strong><br>Fund an on-chain USDC deposit once, then authorize individual calls with cumulative signed vouchers off-chain. The merchant redeems usage and receives payments in batches. A channel may settle more than once; unused funds return through its close and refund flow, not simply when a mandate is stopped.</p>
           <p><strong>PTY (Pseudoterminal)</strong><br>The native OS interface spawned by the laptop CLI. It translates remote keyboard events and renders terminal streams locally.</p>
           <p><strong>WebSocket Relay</strong><br>The mediator gateway that pipes binary shell byte frames between app and host, traversing NAT walls and network boundaries.</p>
           <p><strong>Spending mandate</strong><br>Your workspace-wide model allowlist, per-call cap, total budget, maximum calls and expiry. MetaMask funds a bounded channel; a separate phone-held key authorizes calls within those limits. Stop new calls or close unused escrow. This does not replace your coding agents' own subscriptions.</p>
