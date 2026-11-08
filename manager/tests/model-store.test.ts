@@ -3,6 +3,10 @@ import { Database } from 'bun:sqlite';
 import { createModelStore } from '../src/model-store.ts';
 import { createMandateStore } from '../src/model-mandates.ts';
 const terms = { modelId: 'lab/code', kind: 'chat', provider: 'lab', amount: '1000', expiresAt: Date.now() + 120000, limits: { maxOutputTokens: 20 }, markupBps: 2000, minimumAmount: '1000' } as any;
+test('retained encrypted data prevents silently replacing an older unmarked data key',async()=>{
+    const db=new Database(':memory:'),store=createModelStore(db,'original');await store.create('owner',terms,{prompt:'private'});
+    await store.verifyKey();await expect(createModelStore(db,'wrong-key').verifyKey()).rejects.toThrow('MODEL_DATA_KEY');
+});
 test('generated results remain encrypted and unavailable until payment is acknowledged',async()=>{
     const store=createModelStore(new Database(':memory:'),'key'),q=await store.create('owner',terms,{prompt:'hi'});
     await store.beginPayment('owner',q.id,'one-proof');

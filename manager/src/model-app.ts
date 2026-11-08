@@ -221,5 +221,5 @@ export function createModelApp(options: Options) {
     });
     const mandateApp = createModelMandateApp({ db: options.db, secret: options.dataKey, config, ready, channelReady: Boolean(options.dataKey && config && options.durable), purchases: store, catalog, execute,prepare:(owner,id)=>execute(owner,id,true) });
     app.route('/', mandateApp);
-    return Object.assign(app, { ready:store.ready,cleanupModelData: async () => { await store.cleanup(); await mandateApp.maintainChannels(); } });
+    return Object.assign(app, { ready:store.ready,verifyDataKey:()=>store.verifyKey(),cleanupModelData: async () => { await store.cleanup(); await mandateApp.maintainChannels(); } });
 }

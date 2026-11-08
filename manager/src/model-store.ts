@@ -48,6 +48,11 @@ export function createModelStore(input: ModelDatabaseInput, secret: string) {
         error: value.error, result: value.result&&value.state==='completed' ? decrypt<ModelResult>(value.result) : null });
     return {
         ready,
+        async verifyKey():Promise<void>{
+            await ready;
+            const stored=await db.get('SELECT input,result FROM model_purchases WHERE input IS NOT NULL OR result IS NOT NULL LIMIT 1');
+            if(stored)try{decrypt(stored.input??stored.result);}catch{throw new Error('MODEL_DATA_KEY cannot decrypt retained data. Restore the original key.');}
+        },
         async create(owner: string, terms: ModelQuoteTerms, input: ModelCallInput): Promise<ModelPurchase> {
             await ready;
             const count = await db.query('SELECT count(*) as count FROM model_purchases WHERE owner=? AND created_at>?').get(owner, Date.now() - 60000) as {

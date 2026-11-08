@@ -3599,7 +3599,6 @@ async function startManager(): Promise<void> {
     catch{ /* A missing/unverified disk keeps real payments disabled. */ }
   }
   const modelCredentials=createModelCredentials(modelDatabase);
-  if(modelStorageVerified&&(process.env.MODEL_DATA_KEY||'').length>=32)await assertModelDataKey(modelDatabase,process.env.MODEL_DATA_KEY!);
   if(modelStorageVerified){
     // Restore only hashed, unexpired ownership; phone/CLI keep the actual pairing credential.
     const existing=db.query('SELECT password_hash,code,created_at,expires_at FROM x402_entitlements WHERE expires_at>?').all(Date.now()) as any[];
@@ -3633,6 +3632,8 @@ async function startManager(): Promise<void> {
     },
   });
   await modelApp.ready;
+  await modelApp.verifyDataKey();
+  if(modelStorageVerified&&(process.env.MODEL_DATA_KEY||'').length>=32)await assertModelDataKey(modelDatabase,process.env.MODEL_DATA_KEY!);
 
   setInterval(cleanupManagerSessions, 60 * 1000);
   setInterval(()=>{void modelApp.cleanupModelData().catch(()=>console.warn('[model-storage] maintenance needs retry'));},60 * 1000);
