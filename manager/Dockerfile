@@ -1,4 +1,4 @@
-FROM oven/bun:latest
+FROM oven/bun:1.4.4
 WORKDIR /app
 RUN mkdir -p /data
 ENV MANAGER_DB_PATH=/data/manager.db

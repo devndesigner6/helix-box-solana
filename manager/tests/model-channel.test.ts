@@ -1,7 +1,7 @@
 import { test, expect } from 'bun:test';
 import { createKeyPairSignerFromPrivateKeyBytes, getTransactionDecoder, getBase64Encoder, getCompiledTransactionMessageDecoder } from '@solana/kit';
-import { buildDepositPayload } from '@x402/svm/batch-settlement/client';
-import { buildDelegatedDeposit } from '../../app/lib/solana-channel.ts';
+import { buildDepositPayload,buildRefundPayload } from '@x402/svm/batch-settlement/client';
+import { buildDelegatedDeposit,buildWalletChannelClose } from '../../app/lib/solana-channel.ts';
 
 async function fixture() {
   const payer=await createKeyPairSignerFromPrivateKeyBytes(new Uint8Array(32).fill(1));
@@ -37,4 +37,22 @@ test('rejects unsupported asset, receiver, oversized cap and invalid grace befor
     await expect(buildDelegatedDeposit({...args,payer,authorizer:args.delegate.address,...change})).rejects.toThrow();
   }
   expect(signed).toBe(false);
+});
+test('wallet-approved close matches the canonical SDK transaction and cannot transfer tokens',async()=>{
+  const args=await fixture(),deposit=await buildDepositPayload(args);
+  const official=await buildRefundPayload({payer:args.payer,feePayer:args.feePayer,channelId:deposit.channelId,channelConfig:deposit.payload.channelConfig,
+    voucher:deposit.payload.voucher!,blockhash:args.blockhash,memo:'close-channel'});
+  const transaction=await buildWalletChannelClose({payer:args.payer,feePayer:args.feePayer,channelId:deposit.channelId,blockhash:args.blockhash,memo:'close-channel'});
+  expect(transaction).toBe(official.transaction);
+  const message=getCompiledTransactionMessageDecoder().decode(getTransactionDecoder().decode(getBase64Encoder().encode(transaction)).messageBytes);
+  expect(message.instructions).toHaveLength(2);expect([...message.instructions[0].data!]).toEqual([5]);
+});
+
+test('wallet close passes the actual pinned facilitator validator without an advertised memo',async()=>{
+  const args=await fixture(),deposit=await buildDepositPayload(args);
+  const {verifyRequestCloseTransaction}=await import('../node_modules/@x402/svm/dist/esm/chunk-3WM4BBCN.mjs');
+  const transaction=await buildWalletChannelClose({payer:args.payer,feePayer:args.feePayer,channelId:deposit.channelId,blockhash:args.blockhash,memo:'00000000000000000000000000000001'});
+  await verifyRequestCloseTransaction(transaction,{payer:args.payer.address,feePayer:args.feePayer,channelId:deposit.channelId,acceptedTransactionVersions:[0]});
+  const wrong=await buildWalletChannelClose({payer:args.payer,feePayer:args.feePayer,channelId:deposit.channelId,blockhash:args.blockhash,memo:'not-a-hex-nonce'});
+  await expect(verifyRequestCloseTransaction(wrong,{payer:args.payer.address,feePayer:args.feePayer,channelId:deposit.channelId,acceptedTransactionVersions:[0]})).rejects.toThrow('hexadecimal');
 });

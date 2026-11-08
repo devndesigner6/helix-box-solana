@@ -12,6 +12,8 @@ import { persistentModelStore, assertFinancialResetSafe } from './model-storage-
 import { createX402App } from "./x402-app.js";
 import { createPaymentReceiptStore } from "./payment-receipts.js";
 import { createModelApp } from "./model-app.ts";
+import {connectModelPostgres,createModelDatabase,migrateModelSQLite,assertModelDataKey} from './model-database.ts';
+import {createModelCredentials} from './model-credentials.ts';
 import {
   CLI_HOURLY_ROUTE,
   PREMIUM_WEEKLY_ROUTE,
@@ -587,7 +589,7 @@ function redactSensitive(input: unknown): unknown {
 // Manager mode
 // ============================================================================
 
-function startManager(): void {
+async function startManager(): Promise<void> {
   const managerAdminPassword =
     (process.env.MANAGER_ADMIN_PASSWORD || "").trim();
   if (!managerAdminPassword) {
@@ -2041,13 +2043,14 @@ function startManager(): void {
     }
   };
 
-  const maybeIssueAssemblePassword = (session: AssembleSession): void => {
+  const maybeIssueAssemblePassword = async (session: AssembleSession): Promise<void> => {
     if (!session.password && (!session.appWs || !session.cliWs)) return;
     const credential = workspaceCredential(session, makeV2Password);
     if (!credential) return;
     const { password, expiresAt } = credential;
     const now = Date.now();
     const passwordHash = hashPassword(password);
+    if(modelStorageVerified)await modelCredentials.remember({passwordHash,code:session.code,issuedAt:now,expiresAt});
     session.password = password;
     upsertAssembleSessionStmt.run(
       session.code,
@@ -3555,7 +3558,7 @@ function startManager(): void {
         Date.now(),
       );
     }
-    maybeIssueAssemblePassword(session);
+    await maybeIssueAssemblePassword(session);
     paymentReceipts.markActivated(paymentId);
     return { code: session.code, expiresAt: session.paidUntil };
   };
@@ -3580,29 +3583,59 @@ function startManager(): void {
   }
 
   let modelStorageVerified=false;
-  if(process.platform==='linux' && process.env.MODEL_STORAGE_MOUNT) {
+  let modelDatabase=createModelDatabase(db);
+  if(process.env.DATABASE_URL){
+    try{
+      modelDatabase=connectModelPostgres(process.env.DATABASE_URL);
+      await modelDatabase.initialize();
+      await migrateModelSQLite(db,modelDatabase);
+      modelStorageVerified=true;
+      console.log('[model-storage] PostgreSQL schema and write check passed');
+    }catch{
+      throw new Error('Model PostgreSQL initialization failed. Check DATABASE_URL, TLS and database write permissions. No payment storage fallback was used.');
+    }
+  }else if(process.platform==='linux' && process.env.MODEL_STORAGE_MOUNT) {
     try{modelStorageVerified=persistentModelStore(realpathSync(dbPath),realpathSync(process.env.MODEL_STORAGE_MOUNT),readFileSync('/proc/self/mountinfo','utf8'));}
     catch{ /* A missing/unverified disk keeps real payments disabled. */ }
   }
+  const modelCredentials=createModelCredentials(modelDatabase);
+  if(modelStorageVerified&&(process.env.MODEL_DATA_KEY||'').length>=32)await assertModelDataKey(modelDatabase,process.env.MODEL_DATA_KEY!);
+  if(modelStorageVerified){
+    // Restore only hashed, unexpired ownership; phone/CLI keep the actual pairing credential.
+    const existing=db.query('SELECT password_hash,code,created_at,expires_at FROM x402_entitlements WHERE expires_at>?').all(Date.now()) as any[];
+    for(const credential of existing){
+      if(!await modelCredentials.valid(credential.password_hash)){
+        try{await modelCredentials.remember({passwordHash:credential.password_hash,code:credential.code,issuedAt:Number(credential.created_at),expiresAt:Number(credential.expires_at)});}
+        catch(error){
+          if(!(error instanceof Error)||error.message!=='Workspace credential was revoked')throw error;
+          db.query('DELETE FROM x402_entitlements WHERE password_hash=?').run(credential.password_hash);
+        }
+      }
+    }
+    for(const credential of await modelCredentials.active()){
+      upsertEntitlementStmt.run(credential.passwordHash,credential.code,credential.expiresAt,credential.issuedAt);
+    }
+  }
   const modelApp = createModelApp({
-    db,
+    db:modelDatabase,
     apiKey: process.env.OPENROUTER_API_KEY || '',
     dataKey: (process.env.MODEL_DATA_KEY || '').length >= 32 ? process.env.MODEL_DATA_KEY! : '',
     config: x402PaymentConfig,
     enabled: process.env.MODEL_ENABLE_PAYMENTS === 'true',
     durable: modelStorageVerified,
-    authenticate(request) {
+    async authenticate(request) {
       const authorization = request.headers.get('authorization');
       if (!authorization?.startsWith('Bearer ')) return null;
       const password = authorization.slice(7);
       if (password.length !== V2_PASSWORD_LENGTH) return null;
       const owner = hashPassword(password);
-      return getIssuedRecord(owner) ? owner : null;
+      return getIssuedRecord(owner) && (!modelStorageVerified||await modelCredentials.valid(owner)) ? owner : null;
     },
   });
+  await modelApp.ready;
 
   setInterval(cleanupManagerSessions, 60 * 1000);
-  setInterval(()=>modelApp.cleanupModelData(),60 * 1000);
+  setInterval(()=>{void modelApp.cleanupModelData().catch(()=>console.warn('[model-storage] maintenance needs retry'));},60 * 1000);
   setInterval(() => cleanupExpiredV2State(), 30 * 1000);
 
   Bun.serve<any>({
@@ -5265,7 +5298,7 @@ USDC asset: ${x402PaymentConfig?.asset || "not configured"}
           return req
             .json()
             .then(
-              (body: {
+              async (body: {
                 sessionId?: string;
                 resumeToken?: string;
                 reason?: string;
@@ -5300,6 +5333,10 @@ USDC asset: ${x402PaymentConfig?.asset || "not configured"}
                   );
                 }
                 const now = Date.now();
+                const revokedHash=hashPassword(row.resume_token);
+                if(modelStorageVerified)await modelCredentials.revoke(revokedHash);
+                issuedPasswordsByHash.delete(revokedHash);
+                db.query('DELETE FROM x402_entitlements WHERE password_hash=?').run(revokedHash);
                 const revoked = transitionSessionState(
                   row.resume_token,
                   "ended",
@@ -5416,7 +5453,7 @@ USDC asset: ${x402PaymentConfig?.asset || "not configured"}
         >;
         if (socketData.type === "assemble") {
           const assembleData = socketData as AssembleWebSocketData;
-          void assembleMutex.runExclusive(() => {
+          void assembleMutex.runExclusive(async () => {
             const session = assembleSessionsByCode.get(assembleData.code);
             if (!session || session.expiresAt <= Date.now()) {
               ws.close(1008, "code expired");
@@ -5427,8 +5464,8 @@ USDC asset: ${x402PaymentConfig?.asset || "not configured"}
             } else {
               session.cliWs = ws as ServerWebSocket<AssembleWebSocketData>;
             }
-            maybeIssueAssemblePassword(session);
-          });
+            await maybeIssueAssemblePassword(session);
+          }).catch(()=>ws.close(1011,'workspace credential could not be saved'));
           return;
         }
 
@@ -5910,4 +5947,4 @@ USDC asset: ${x402PaymentConfig?.asset || "not configured"}
   );
 }
 
-startManager();
+void startManager().catch(error=>{console.error(error instanceof Error?error.message:'Manager startup failed');process.exit(1);});
