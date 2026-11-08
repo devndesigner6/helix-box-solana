@@ -3,8 +3,9 @@
     <img src="landing/public/assets/images/helixbox-readme.png" alt="Helix Box" width="600">
   </a>
 </div><br />
-<p align="center"><strong>Build, run, and ship directly from your phone.</strong></p>
-<p align="center">HelixBox connects your phone to your laptop's development environment: files, terminal, Git, app previews and AI coding agents.</p>
+<p align="center"><strong>Code from your phone. Agents pay per call.</strong></p>
+<p align="center">Your laptop’s files, terminal, Git, previews, and coding agents, on your phone.</p>
+<p align="center">Your workspace stays free. Let coding agents discover and buy model calls through x402 on Solana, using USDC payment channels and spending limits you approve.</p>
 
 <p align="center">
   <a href="https://helixbox.vercel.app/"><img src="https://img.shields.io/badge/Open_HelixBox-4F46E5?style=for-the-badge" alt="Open HelixBox"></a>
@@ -16,9 +17,10 @@
 
 ## Demo
 
-[![Watch HelixBox: mobile coding agents and Solana x402 model payments](https://i.ytimg.com/vi/KXF1TQKWFDM/hqdefault.jpg)](https://youtu.be/KXF1TQKWFDM)
-
-[Watch the walkthrough on YouTube](https://youtu.be/KXF1TQKWFDM): laptop pairing, the mobile workspace and bounded agent model purchases using USDC on Solana.
+<p align="center">
+  <a href="https://youtu.be/KXF1TQKWFDM"><img src="https://i.ytimg.com/vi/KXF1TQKWFDM/maxresdefault.jpg" alt="Watch HelixBox: mobile coding agents and Solana x402 model payments" width="720"></a>
+</p>
+<p align="center"><a href="https://youtu.be/KXF1TQKWFDM">Watch the walkthrough on YouTube</a>: laptop pairing, the mobile workspace and bounded agent model purchases using USDC on Solana.</p>
 
 <p align="center">
   <img src="app/assets/images/onboarding/1/left.png" alt="HelixBox mobile terminal" width="180">
@@ -80,7 +82,7 @@ Expo/React Native mobile app, currently distributed on Android. iOS and web are 
 
 ## CLI
 
-Node.js CLI that securely connects your local workspace to the app over WebSocket. Run it with `npx helixbox-cli`.
+Node.js CLI that securely connects your local workspace to the app over WebSocket. Run it with `npx helixbox-cli`. Use version **0.2.0 or newer** for the catalog, mandate, quote, purchase and status tools available to Codex and Claude Code. Image/audio results are saved under `.helixbox-model-results/` in your project.
 
 - Filesystem operations (read, write, grep, etc.)
 - Git commands (status, commit, push, pull, etc.)
@@ -133,19 +135,8 @@ The built-in manual API client stays free.
 
 ## Manager and Proxy
 
-Bun-based WebSocket service that connects the CLI and app using session codes. The public manager is deployed at [helixbox-manager.onrender.com](https://helixbox-manager.onrender.com).
-
-Use [manager/.env.example](manager/.env.example) for network, USDC, receiving-address and facilitator settings. Workspace sessions use SQLite; model purchases, mandates, channels and hashed ownership credentials use the private Neon `DATABASE_URL`. Payment storage must be durable. No server-side payer wallet private key is required.
-
-Model tools need a funded backend-only `OPENROUTER_API_KEY` and a stable `MODEL_DATA_KEY` of at least 32 characters. Back up the data key: it encrypts retained results and derives the merchant's channel-close authorizer. Keep admin credentials, provider keys and `DATABASE_URL` out of `EXPO_PUBLIC_*`, agent prompts and Git. For self-hosting, keep `MODEL_ENABLE_PAYMENTS=false` until storage, configuration and payment checks pass.
-
-Read the [model-tools design](docs/MODEL_CATALOG_DESIGN.md) and [handbook](docs/HANDBOOK.md) for configuration, recovery and deployment details.
-
-Use CLI **0.2.0 or newer** for agent model tools. The CLI exposes catalog, mandate, quote, purchase and status tools to Codex and Claude Code. Image/audio results are saved under `.helixbox-model-results/` in the project. For CLI development, run `npm ci` and `npm run build` in `cli/`.
-
-- Pairing codes with a seven-day lifetime, separate from model purchase identity
-- Dual-channel architecture (control + data)
-- QR code pairing
+Bun services connect the phone and laptop over an encrypted relay and coordinate workspace sessions and model payments.
+For self-hosting, durable payment storage and secret configuration, follow the [handbook](docs/HANDBOOK.md) and [manager environment example](manager/.env.example).
 
 <br />
 

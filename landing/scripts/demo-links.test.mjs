@@ -11,7 +11,9 @@ test('new Solana demo replaces old public links and the local hero clip', () => 
   assert.ok(!page.includes('2cmHX_T2Qis'));
   assert.ok(!page.includes('<video'));
   assert.ok(page.includes(`data-demo-video="${id}"`));
-  assert.equal([...page.matchAll(new RegExp(`href="https://youtu.be/${id}"`, 'g'))].length, 4);
+  assert.equal([...page.matchAll(new RegExp(`href="https://youtu.be/${id}"`, 'g'))].length, 5);
+  assert.ok(!page.includes('<iframe'), 'Do not load YouTube until a visitor activates the cover');
+  assert.ok(page.includes(`https://i.ytimg.com/vi/${id}/maxresdefault.jpg`));
   assert.ok(readme.includes(`https://youtu.be/${id}`));
   assert.ok(!readme.includes('https://helixboxide.xyz/'));
 });

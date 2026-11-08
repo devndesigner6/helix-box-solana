@@ -3,18 +3,18 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>HelixBox | Your development environment, in your pocket</title>
-  <meta name="description" content="Build, run, and ship from your phone. Free workspace access and your installed coding agents, with optional x402 model calls paid in Solana USDC.">
+  <title>HelixBox | Mobile coding agents and Solana x402 payments</title>
+  <meta name="description" content="Your laptop's files, terminal, Git, previews and coding agents, on your phone. Let agents buy model calls within your approved Solana USDC budget through x402.">
   <link rel="canonical" href="https://helixbox.vercel.app/">
   <link rel="icon" type="image/png" href="/assets/images/helixbox-splash.png">
   <link rel="apple-touch-icon" href="/assets/images/helixbox-splash.png">
   <meta property="og:site_name" content="HelixBox">
-  <meta property="og:title" content="HelixBox | Your development environment, in your pocket">
+  <meta property="og:title" content="HelixBox | Code from your phone. Agents pay per call.">
   <meta property="og:description" content="Your laptop does the work. Use your mobile workspace for free, and let coding agents buy model calls within your approved Solana USDC budget.">
   <meta property="og:url" content="https://helixbox.vercel.app/">
   <meta property="og:image" content="https://helixbox.vercel.app/assets/images/helixbox-splash.png">
   <meta name="twitter:card" content="summary">
-  <meta name="twitter:title" content="HelixBox | Build, run, and ship from your phone">
+  <meta name="twitter:title" content="HelixBox | Mobile coding agents and Solana x402 payments">
   <meta name="twitter:description" content="Pair your laptop. Keep working for free. Approve a budget for optional x402 model calls in Solana USDC.">
   <meta name="twitter:image" content="https://helixbox.vercel.app/assets/images/helixbox-splash.png">
   <link rel="preload" href="/assets/fonts/VT323-Regular.ttf" as="font" type="font/ttf" crossorigin>
@@ -39,24 +39,29 @@
       </div>
     </header>
       <section class="hero wrap" aria-labelledby="hero-title">
-        <p class="eyebrow hero-eyebrow" data-reveal>YOUR LAPTOP. NOW WITH YOU.</p>
-        <h1 id="hero-title"><span data-heading-reveal>Build, run, and ship</span><br><span class="hero-subtitle" data-heading-reveal>from your phone.</span></h1>
-        <p class="hero-description" data-reveal>Your laptop’s files, terminal, Git, previews, and coding agents, on your phone. Keep working for free. Give your agent a budget for model calls, paid through x402 in Solana USDC.</p>
+        <p class="eyebrow hero-eyebrow" data-reveal>AGENTIC PAYMENTS · SOLANA × x402</p>
+        <h1 id="hero-title"><span data-heading-reveal>Code from your phone.</span><br><span class="hero-subtitle" data-heading-reveal>Agents pay per call.</span></h1>
+        <p class="hero-description" data-reveal><span class="hero-workspace-line">Your laptop’s files, terminal, Git, previews, and coding agents, on your phone.</span><span class="hero-payment-line">Give Codex or Claude Code a USDC budget to discover and buy model calls through x402 on Solana. Your workspace stays free.</span></p>
         <div class="button-row" data-reveal>
-          <a class="button button-dark" href="https://github.com/devndesigner6/helix-box-solana/releases" target="_blank" rel="noopener noreferrer"><img src="/assets/media/android.svg" alt="" width="19" height="19"> Download Android ↗</a>
-          <a class="button button-light" href="https://youtu.be/KXF1TQKWFDM" target="_blank" rel="noopener noreferrer">Watch the demo <span aria-hidden="true">▶</span></a>
+          <a class="button button-dark" href="https://youtu.be/KXF1TQKWFDM" target="_blank" rel="noopener noreferrer"><span aria-hidden="true">▶</span> Watch the Solana demo</a>
+          <a class="button button-light" href="https://github.com/devndesigner6/helix-box-solana/releases/tag/v1-solana-beta.1" target="_blank" rel="noopener noreferrer">Download Android ↗</a>
         </div>
-        <div class="hero-meta" data-reveal><span>Open source</span><span>No signup to pair</span><span>Free workspace controls</span></div>
+        <div class="hero-meta" data-reveal><span>Solana Mainnet</span><span>User-set spending limits</span><span>Free workspace</span></div>
         <div class="demo-card" data-reveal>
-          <div class="demo-bar"><span><i class="status-dot"></i> HELIXBOX / IN ACTION</span><span>YOUR PROJECT, YOUR MACHINE</span></div>
+          <div class="demo-bar"><span><i class="status-dot"></i> HELIXBOX / SOLANA DEMO</span><span>x402 · USDC · SPENDING LIMITS</span></div>
           <div class="demo-screen">
-            <iframe data-demo-video="KXF1TQKWFDM" src="https://www.youtube-nocookie.com/embed/KXF1TQKWFDM?autoplay=0&amp;mute=1&amp;playsinline=1&amp;controls=1&amp;rel=0&amp;loop=1&amp;playlist=KXF1TQKWFDM" title="HelixBox Solana demo: mobile coding agents and x402 payments" allow="autoplay; encrypted-media; picture-in-picture; fullscreen" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+            <a class="demo-cover" data-demo-video="KXF1TQKWFDM" href="https://youtu.be/KXF1TQKWFDM" target="_blank" rel="noopener noreferrer" aria-label="Play the HelixBox Solana demo">
+              <img src="https://i.ytimg.com/vi/KXF1TQKWFDM/maxresdefault.jpg" alt="HelixBox Solana demo video thumbnail" width="1280" height="720" fetchpriority="high">
+              <span class="demo-cover-play" aria-hidden="true">▶</span>
+              <span class="demo-cover-caption">Watch HelixBox on Solana</span>
+            </a>
             <div class="demo-controls">
               <a class="demo-link" href="https://youtu.be/KXF1TQKWFDM" target="_blank" rel="noopener noreferrer" aria-label="Watch the full HelixBox demo on YouTube">Full walkthrough on YouTube ↗</a>
             </div>
             <p class="media-status" id="mediaStatus" role="status" aria-live="polite"></p>
           </div>
         </div>
+        <ol class="hero-payment-flow" aria-label="Agent payment flow"><li>Set limits</li><li>Fund USDC channel</li><li>Agent buys model calls</li><li>Usage settles in batches</li></ol>
       </section>
     </div>
 

@@ -1,6 +1,6 @@
 import { inject } from '@vercel/analytics';
 import './theme.js';
-import { togglePreview, youtubePreviewUrl } from './src/preview-controls.js';
+import { togglePreview, loadYoutubePreview } from './src/preview-controls.js';
 inject();
 
 const root = document.documentElement;
@@ -10,8 +10,14 @@ const mobile = window.matchMedia('(max-width: 760px)');
 const toggle = document.getElementById('menuToggle');
 const nav = document.getElementById('primaryNav');
 const video = document.querySelector('.demo-screen video');
-const demoFrame = document.querySelector('.demo-screen iframe[data-demo-video]');
+const demoCover = document.querySelector('.demo-cover[data-demo-video]');
 const motionButton = document.getElementById('demoMotion');
+
+demoCover?.addEventListener('click', event => {
+  if (event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+  event.preventDefault();
+  loadYoutubePreview(demoCover);
+});
 
 function setMenu(open, returnFocus = false) {
   const toggle = document.getElementById('menuToggle');
@@ -75,10 +81,6 @@ function playbackFailed() {
   syncVideoButton();
 }
 function respectMotion() {
-  if (demoFrame) {
-    const source = youtubePreviewUrl(demoFrame.dataset.demoVideo, reducedMotion.matches);
-    if (demoFrame.src !== source) demoFrame.src = source;
-  }
   if (reducedMotion.matches) {
     root.classList.remove('js-motion');
     video?.pause();

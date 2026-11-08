@@ -40,3 +40,28 @@ test('a missing video cannot activate the play control', async () => {
   assert.equal(typeof togglePreview, 'function', 'Preview controller is missing');
   assert.equal(await togglePreview(null), false);
 });
+
+test('activating the demo cover replaces it with the selected accessible inline player', async () => {
+  const {loadYoutubePreview} = await import('../src/preview-controls.js');
+  assert.equal(typeof loadYoutubePreview, 'function');
+  let replacement;
+  const cover = {
+    dataset: {demoVideo: 'KXF1TQKWFDM'},
+    ownerDocument: {createElement: tag => ({tag, attributes: {}, setAttribute(name, value) {this.attributes[name] = value;}, focus() {this.focused = true;}})},
+    replaceWith(frame) {replacement = frame;},
+  };
+  const frame = loadYoutubePreview(cover);
+  assert.equal(frame, replacement);
+  assert.equal(frame.tag, 'iframe');
+  const url = new URL(frame.src);
+  assert.equal(url.origin, 'https://www.youtube-nocookie.com');
+  assert.equal(url.pathname, '/embed/KXF1TQKWFDM');
+  assert.equal(url.searchParams.get('autoplay'), '1');
+  assert.equal(url.searchParams.get('mute'), '0');
+  assert.equal(frame.title, 'HelixBox Solana demo: mobile coding agents and x402 payments');
+  assert.ok(frame.allow.includes('autoplay'));
+  assert.ok(frame.allowFullscreen);
+  assert.equal(frame.referrerPolicy, 'strict-origin-when-cross-origin');
+  assert.equal(frame.tabIndex, 0);
+  assert.ok(frame.focused);
+});

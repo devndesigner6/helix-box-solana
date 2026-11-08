@@ -3,10 +3,12 @@ import { readFileSync } from 'node:fs';
 
 const html = readFileSync(new URL('../index.html', import.meta.url), 'utf8');
 const css = readFileSync(new URL('../product-surfaces.css', import.meta.url), 'utf8');
-const video = html.match(/<iframe\s[^>]*data-demo-video="KXF1TQKWFDM"[^>]*>/)?.[0];
+const video = html.match(/<a\s[^>]*class="demo-cover"[^>]*data-demo-video="KXF1TQKWFDM"[^>]*>/)?.[0];
 
 assert.ok(video, 'hero video slot exists');
-assert.match(video, /youtube-nocookie\.com\/embed\/KXF1TQKWFDM\?[^"']*autoplay=0[^"']*mute=1/);
+assert.match(video, /href="https:\/\/youtu\.be\/KXF1TQKWFDM"/);
+assert.ok(!html.includes('<iframe'), 'The initial view must show a thumbnail, not a black player');
+assert.ok(html.includes('https://i.ytimg.com/vi/KXF1TQKWFDM/maxresdefault.jpg'));
 assert.match(html, /<a[^>]+href="https:\/\/youtu\.be\/KXF1TQKWFDM"[^>]+target="_blank"/);
 assert.match(css, /\.demo-screen iframe\s*\{/);
-console.log('Solana demo is embedded with native controls; autoplay is enabled by JS only when motion is allowed.');
+console.log('Solana demo uses its real thumbnail and loads an accessible inline player after activation.');
