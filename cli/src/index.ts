@@ -4,6 +4,7 @@ import { WebSocket } from "ws";
 import qrcode from "qrcode-terminal";
 import shell from "shelljs";
 import { createAiManager, isAiBackend } from "./ai/index.js";
+import {configureModelTools} from './ai/model-tools.js';
 import type { AiManager, AiBackend } from "./ai/index.js";
 import type { Message, Response } from "./transport/protocol.js";
 import { V2SessionTransport } from "./transport/v2.js";
@@ -3728,6 +3729,7 @@ async function main(): Promise<void> {
 
     currentSessionCode = sessionCodeToUse;
     currentSessionPassword = sessionPasswordToUse;
+    configureModelTools(()=>currentSessionPassword?{managerUrl:MANAGER_URL,password:currentSessionPassword}:null);
     if (usedSavedSession) {
       const reattach = await claimReattach(sessionPasswordToUse);
       currentPrimaryGateway = reattach.proxyUrl;

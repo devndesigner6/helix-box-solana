@@ -12,10 +12,11 @@ export interface ToolModel {
 export interface ModelCatalog {models:ToolModel[];configured:boolean;paymentsEnabled:boolean;generationStatus:string;fetchedAt:number;warnings:string[]}
 export interface ModelPurchase {
   id:string;state:string;terms:{modelId:string;kind:ModelKind;amount:string;expiresAt:number;provider:string;markupBps:number;limits:Record<string,unknown>};
-  transaction:string|null;error:string|null;
+  transaction:string|null;error:string|null;commitmentId?:string|null;channelId?:string|null;
   result:{kind:ModelKind;text?:string;base64?:string;mediaType?:string;generationId:string|null;providerCost:number|null}|null;
 }
-const MANAGER = process.env.EXPO_PUBLIC_MANAGER_URL || 'https://helixbox-manager.onrender.com';
+export const MODEL_MANAGER_URL = process.env.EXPO_PUBLIC_MANAGER_URL || 'https://helixbox-manager.onrender.com';
+const MANAGER=MODEL_MANAGER_URL;
 const ASSET = 'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v';
 const PAY_TO = '7sbe2WLBQxJCBmPfL2xsy7WiFzjMS147R1DUK7LHwxyy';
 export function formatUSDC(amount:string):string {

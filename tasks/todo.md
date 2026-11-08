@@ -4,6 +4,8 @@
 
 Do not build the final APK or describe autonomous payments as complete until these gates pass. Existing wallet-per-call routes stay disabled on Render while this work is incomplete.
 
+2026-11-08 current checkpoint: 69 backend/CLI-tool tests and eight app policy/recovery tests passed. Manager TypeScript, CLI build and built MCP protocol passed. Neon/PostgreSQL financial storage, ownership recovery, exact saved-proof replay/cancellation, prepare-before-charge fulfillment, crash recovery and close/gating checks are implemented. Final Android/Hermes export passed. No paid Render upgrade; live Neon deployment, actual agent/device purchase and mainnet close remain unverified. See `tasks/model-tools-progress.md`.
+
 - [x] Free workspace and installed Codex/Claude access; old hourly/week payment routes retired. Live catalog and wallet-per-call foundation deployed at a938445. This is not autonomous-payment proof.
 - [ ] A. Client-held delegation: phone generates an Ed25519 voucher key in secure storage. MetaMask approves only a bounded canonical Solana USDC channel deposit. Verify payer, delegate, merchant, mint, chain, deposit, instructions and signatures; never expose the payer key or give the backend voucher-signing authority.
 - [ ] B. Durable mandate policy: immutable model allowlist, per-call cap, total cap, maximum calls, expiry and stop. Reserve atomically, reject cross-owner/replayed requests, and keep uncertain charges reserved across restarts. Tests precede implementation.

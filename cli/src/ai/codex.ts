@@ -6,6 +6,7 @@ import * as crypto from "crypto";
 import * as path from "path";
 import { spawn, ChildProcess } from "child_process";
 import { createInterface } from "readline";
+import {MODEL_TOOL_DEFINITIONS,modelTools} from './model-tools.js';
 import type {
   AIProvider,
   AiEventEmitter,
@@ -209,6 +210,7 @@ export class CodexProvider implements AIProvider {
     const result = await this.call("thread/start", {
       cwd: process.cwd(),
       persistExtendedHistory: true,
+      dynamicTools:MODEL_TOOL_DEFINITIONS.map(tool=>({type:'function',...tool})),
     });
     const threadObject = this.extractThreadObject(result);
     const threadId = this.extractThreadId(threadObject);
@@ -660,6 +662,15 @@ export class CodexProvider implements AIProvider {
 
   private handleServerRequest(method: string, requestId: number | string, params: Record<string, unknown>): void {
     const session = this.resolveSessionFromPayload(params);
+
+    if(method==='item/tool/call') {
+      void modelTools.call(String(params.tool),params.arguments??{}).then(value=>{
+        this.send({jsonrpc:'2.0',id:requestId,result:{success:true,contentItems:[{type:'inputText',text:JSON.stringify(value)}]}});
+      }).catch(error=>{
+        this.send({jsonrpc:'2.0',id:requestId,result:{success:false,contentItems:[{type:'inputText',text:error instanceof Error?error.message:'Model tool failed'}]}});
+      });
+      return;
+    }
 
     if (method === "item/tool/requestUserInput") {
       const questionRequestId = String(requestId);
@@ -1470,6 +1481,7 @@ export class CodexProvider implements AIProvider {
     const params: Record<string, unknown> = {
       threadId,
       persistExtendedHistory: true,
+      dynamicTools:MODEL_TOOL_DEFINITIONS.map(tool=>({type:'function',...tool})),
     };
     if (session?.cwd) {
       params.cwd = session.cwd;

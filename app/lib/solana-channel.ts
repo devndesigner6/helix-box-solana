@@ -1,5 +1,5 @@
 import {
-  AccountRole,address,blockhash,appendTransactionMessageInstructions,compileTransaction,createTransactionMessage,
+  AccountRole,address,blockhash,appendTransactionMessageInstructions,assertIsTransactionWithinSizeLimit,compileTransaction,createTransactionMessage,
   getAddressEncoder,getArrayEncoder,getBase64EncodedWireTransaction,getProgramDerivedAddress,getPublicKeyFromAddress,
   getStructEncoder,getU8Encoder,getU16Encoder,getU32Encoder,getU64Encoder,pipe,setTransactionMessageFeePayer,
   setTransactionMessageLifetimeUsingBlockhash,verifySignature,type TransactionPartialSigner,
@@ -56,6 +56,7 @@ export async function buildDelegatedDeposit(args:DelegatedDepositArgs) {
       {programAddress:MEMO,accounts:[],data:utf8(args.memo)},{programAddress:MEMO,accounts:[],data:utf8(encodeReceiverBindingMemo(args.receiverAuthorizer))},
     ],m));
   const unsigned=compileTransaction(message);
+  assertIsTransactionWithinSizeLimit(unsigned);
   const [signatures]=await args.payer.signTransactions([unsigned]);
   const signature=signatures?.[payer];
   if(!signature||Object.keys(signatures).some(key=>key!==payer)||!await verifySignature(await getPublicKeyFromAddress(payer),signature,unsigned.messageBytes))throw new Error('Wallet did not sign the canonical channel deposit');
@@ -63,4 +64,19 @@ export async function buildDelegatedDeposit(args:DelegatedDepositArgs) {
   if(transaction.length>1644)throw new Error('Channel deposit exceeds Solana transaction size');
   return {channelId,payload:{type:'deposit' as const,channelConfig:{payer,payerAuthorizer:authorizer,receiver:args.receiver,receiverAuthorizer:args.receiverAuthorizer,
     token:mint,salt:args.salt.toString(),openSlot:Number(args.openSlot),withdrawDelay:args.withdrawDelay},deposit:{amount:args.depositAmount.toString(),transaction}}};
+}
+
+export async function buildWalletChannelClose(args:{payer:TransactionPartialSigner;feePayer:string;channelId:string;blockhash:{blockhash:string;lastValidBlockHeight:bigint};memo:string}) {
+  if(!args.memo||utf8(args.memo).length>128)throw new Error('Invalid channel close memo');
+  const payer=args.payer.address;
+  const message=pipe(createTransactionMessage({version:0}),m=>setTransactionMessageFeePayer(address(args.feePayer),m),
+    m=>setTransactionMessageLifetimeUsingBlockhash({blockhash:blockhash(args.blockhash.blockhash),lastValidBlockHeight:args.blockhash.lastValidBlockHeight},m),
+    m=>appendTransactionMessageInstructions([
+      {programAddress:PROGRAM,accounts:[{address:payer,role:AccountRole.READONLY_SIGNER},{address:address(args.channelId),role:AccountRole.WRITABLE}],data:new Uint8Array([5])},
+      {programAddress:MEMO,accounts:[],data:utf8(args.memo)},
+    ],m));
+  const unsigned=compileTransaction(message);assertIsTransactionWithinSizeLimit(unsigned);
+  const [signatures]=await args.payer.signTransactions([unsigned]),signature=signatures?.[payer];
+  if(!signature||Object.keys(signatures).some(key=>key!==payer)||!await verifySignature(await getPublicKeyFromAddress(payer),signature,unsigned.messageBytes))throw new Error('Wallet did not sign the canonical channel close');
+  return getBase64EncodedWireTransaction({...unsigned,signatures:{...unsigned.signatures,[payer]:signature}});
 }

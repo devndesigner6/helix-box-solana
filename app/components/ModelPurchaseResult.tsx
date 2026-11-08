@@ -47,6 +47,7 @@ export default function ModelPurchaseResult({purchase,busy,onPay,onResume,onRefr
     {purchase.state==='paid'?<Pressable accessibilityRole="button" disabled={busy} style={button} onPress={onResume}><Text style={text}>Resume paid call · no new payment</Text></Pressable>:null}
     {purchase.state!=='quoted'?<Pressable accessibilityRole="button" disabled={busy} style={button} onPress={onRefresh}><Text style={text}>Refresh purchase status</Text></Pressable>:null}
     {purchase.transaction?<Text selectable style={{...text,fontSize:12}}>Settlement: {purchase.transaction}</Text>:null}
+    {purchase.commitmentId?<Text selectable style={{...text,fontSize:12}}>x402 channel commitment: {purchase.commitmentId}. On-chain settlement is batched separately.</Text>:null}
     {purchase.result?.text?<Text selectable style={text}>{purchase.result.text}</Text>:null}
     {purchase.result?.kind==='image' && purchase.result.base64?<Image accessibilityLabel="Generated model output" source={{uri:`data:image/png;base64,${purchase.result.base64}`}} style={{width:'100%',height:280}} resizeMode="contain"/>:null}
     {purchase.result?.kind==='voice'?<Pressable accessibilityRole="button" style={button} onPress={()=>void play()}><Text style={text}>{playing?'Stop audio':'Play generated audio'}</Text></Pressable>:null}

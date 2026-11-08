@@ -2,6 +2,7 @@ import 'react-native-get-random-values';
 import '@/lib/metamask-polyfills';
 import { AppSettingsProvider, useAppSettings } from "@/contexts/AppSettingsContext";
 import { ConnectionProvider } from "@/contexts/ConnectionContext";
+import ModelMandateRunner from '@/components/ModelMandateRunner';
 import { EditorProvider } from "@/contexts/EditorContext";
 import { ReviewPromptProvider } from "@/contexts/ReviewPromptContext";
 import { SessionRegistryProvider } from "@/contexts/SessionRegistry";
@@ -350,6 +351,7 @@ function RootLayout() {
               <EditorProvider>
                 <PluginProvider>
                   <SessionRegistryProvider>
+                    <ModelMandateRunner />
                     <RootLayoutContent />
                   </SessionRegistryProvider>
                 </PluginProvider>

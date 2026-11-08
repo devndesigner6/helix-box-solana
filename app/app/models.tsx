@@ -1,5 +1,6 @@
 import Header from '@/components/Header';
 import ModelPurchaseResult from '@/components/ModelPurchaseResult';
+import ModelMandateControls from '@/components/ModelMandateControls';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useModelTools } from '@/hooks/useModelTools';
 import type { ModelKind, ToolModel } from '@/lib/model-tools';
@@ -37,9 +38,10 @@ export default function ModelTools() {
       contentContainerStyle={{padding:16,paddingBottom:Math.max(insets.bottom,16),gap:12}}
       ListHeaderComponent={<View style={{gap:12}}>
         <Text style={{...text,fontSize:18,fontFamily:fonts.sans.semibold}}>A model for the task.</Text>
-        <Text style={muted}>Your workspace and your laptop's coding agents stay free. These are separate, wallet-approved model calls. Autonomous spending is not enabled.</Text>
+        <Text style={muted}>Your workspace and your laptop's coding agents stay free. Buy a model call directly, or approve a capped mandate for your agents.</Text>
         <Text style={muted}>{tools.catalog?.generationStatus??'Fetching the live model catalog…'}</Text>
         {!tools.paired?<Text style={muted}>Pair your laptop to create quotes and recover purchases.</Text>:null}
+        {tools.paired?<ModelMandateControls selected={selected} purchase={tools.purchase} enabled={Boolean(tools.catalog?.paymentsEnabled)} onResult={id=>void tools.open(id)}/>:null}
         {tools.catalog?.warnings.map(warning=><Text key={warning} style={muted}>{warning}</Text>)}
         <View style={{flexDirection:'row',gap:8}}>{(['chat','image','voice'] as ModelKind[]).map(value=>
           <Pressable key={value} accessibilityRole="tab" accessibilityState={{selected:kind===value}} onPress={()=>changeKind(value)} style={{...button,flex:1,backgroundColor:kind===value?colors.bg.elevated:colors.bg.raised}}>

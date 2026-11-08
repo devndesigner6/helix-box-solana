@@ -1,5 +1,6 @@
 import { spawn, spawnSync, type ChildProcess } from "node:child_process";
 import crypto from "node:crypto";
+import {prepareClaudeModelTools} from './model-tools.js';
 import type {
   AIProvider,
   AiEventEmitter,
@@ -130,9 +131,11 @@ export class CliAgentProvider implements AIProvider {
     this.emit("session.status", { sessionID: session.id, status: { type: "busy" } });
 
     const args = this.argsForPrompt(prompt, model);
+    const modelTools=this.backend==='claude'?await prepareClaudeModelTools():null;
+    if(modelTools)args.push('--mcp-config',modelTools.filename,'--allowedTools','mcp__helixbox__*');
     const child = spawn(COMMANDS[this.backend], args, {
       cwd: process.cwd(),
-      env: { ...process.env, NO_COLOR: "1", FORCE_COLOR: "0" },
+      env: { ...process.env,...modelTools?.env, NO_COLOR: "1", FORCE_COLOR: "0" },
       stdio: ["ignore", "pipe", "pipe"],
       shell: process.platform === "win32",
     });
@@ -142,8 +145,9 @@ export class CliAgentProvider implements AIProvider {
     let stderr = "";
     child.stdout?.on("data", (chunk: Buffer) => { stdout += chunk.toString(); });
     child.stderr?.on("data", (chunk: Buffer) => { stderr += chunk.toString(); });
-    child.on("error", (error) => this.finishError(session, assistantId, error.message));
+    child.on("error", (error) => {void modelTools?.cleanup();this.finishError(session, assistantId, error.message);});
     child.on("close", (code) => {
+      void modelTools?.cleanup();
       session.process = undefined;
       if (this.shuttingDown) return;
       const output = this.cleanOutput(stdout || stderr);

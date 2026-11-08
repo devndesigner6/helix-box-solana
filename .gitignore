@@ -41,6 +41,8 @@ __pycache__/
 coverage/
 playwright-report/
 test-results/
+.helixbox-mcp-*.json
+.helixbox-model-results/
 /docs/superpowers/plans/
 /docs/superpowers/specs/2026-10-03-helixbox-product-landing.md
 /landing/assets/reference/git.png
