@@ -13,10 +13,20 @@ Node.js CLI that connects a local machine to the Helix Box mobile app through th
 Run the published package:
 
 ```bash
-npx helixbox-cli
+npx helixbox-cli@latest
 ```
 
 The CLI prints a QR code and session details. Scan the QR code with the Helix Box app to connect to the current working directory.
+
+## Model tools in 0.2.0
+
+Pairing, workspace controls and access to your installed Codex/Claude Code are free. Their own provider subscriptions remain separate.
+
+The CLI gives Codex and Claude Code five tools: live model discovery, approved mandates, bounded quotes, purchase requests and result retrieval. Choose allowed models and approve a USDC budget in the Android app first. Your foreground phone signs calls within those limits; the CLI and coding agent never receive a wallet signing key.
+
+Optional chat, image and speech calls use real x402 payments on Solana Mainnet. A complete result is prepared before its charge settles and is released only after acknowledgement. Keep the original purchase ID if a response is interrupted; do not buy again to retrieve it. Completed image/audio files are saved in `.helixbox-model-results/` inside your project.
+
+This is an experimental mainnet beta. Start with a small budget and verify pairing, model delivery and returning unused escrow on your phone. The phone must remain foregrounded to approve new calls. Older CLI versions do not expose these tools; restart the CLI and pair again after upgrading.
 
 Common options:
 

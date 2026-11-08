@@ -1,6 +1,13 @@
 {
   "name": "helixbox-cli",
-  "version": "0.1.124",
+  "version": "0.2.0",
+  "description": "Pair a laptop workspace with HelixBox on Android, with bounded model tools for Codex and Claude Code.",
+  "homepage": "https://helixboxide.xyz",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/devndesigner6/helix-box-solana.git",
+    "directory": "cli"
+  },
   "author": [
     {
       "name": "Soham Bharambe",
@@ -18,7 +25,8 @@
   },
   "files": [
     "dist",
-    "bin"
+    "bin",
+    "CHANGELOG.md"
   ],
   "scripts": {
     "build": "tsc && npm run prepare-bin",
