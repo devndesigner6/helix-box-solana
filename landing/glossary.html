@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>HelixBox | Glossary</title>
   <link rel="icon" type="image/png" href="/assets/images/helixbox-splash.png">
-  <meta name="description" content="Understand HelixBox workspace pairing, coding agents, and time-bound x402 sessions on Solana Mainnet.">
+  <meta name="description" content="Understand HelixBox workspace pairing, model spending mandates, and x402 payments on Solana Mainnet.">
   <link rel="stylesheet" href="/style.css">
   <link rel="stylesheet" href="/theme-controls.css">
   <style>
@@ -59,7 +59,7 @@
         <span>GLOSSARY &middot; TERMINOLOGY</span>
       </div>
       <h1 class="manual-title">Developer<br>Glossary</h1>
-      <p class="manual-tagline">The terms you will see when pairing your laptop and starting an agent session.</p>
+      <p class="manual-tagline">The terms you will see when pairing your laptop and approving optional model calls.</p>
       <div class="ascii-rule" style="margin-top:48px;"></div>
     </section>
 
@@ -67,10 +67,10 @@
       <div class="preface-grid">
         <div class="preface-eyebrow">Definitions</div>
         <div class="preface-body">
-          <p><strong>x402</strong><br>A payment protocol based on HTTP payment requirements. HelixBox uses it with USDC on Solana Mainnet to activate time-bound agent access after settlement is verified.</p>
+          <p><strong>x402</strong><br>A payment protocol based on HTTP payment requirements. HelixBox uses it with USDC on Solana Mainnet for bounded model calls. A complete result is prepared before its charge settles and released after acknowledgement.</p>
           <p><strong>PTY (Pseudoterminal)</strong><br>The native OS interface spawned by the laptop CLI. It translates remote keyboard events and renders terminal streams locally.</p>
           <p><strong>WebSocket Relay</strong><br>The mediator gateway that pipes binary shell byte frames between app and host, traversing NAT walls and network boundaries.</p>
-          <p><strong>Agent session</strong><br>A defined access period: $0.25 USDC for one hour or $2 USDC for a seven-day pass with fair-use limits. Model subscriptions and API charges remain separate.</p>
+          <p><strong>Spending mandate</strong><br>Your workspace-wide model allowlist, per-call cap, total budget, maximum calls and expiry. MetaMask funds a bounded channel; a separate phone-held key authorizes calls within those limits. Stop new calls or close unused escrow. This does not replace your coding agents' own subscriptions.</p>
         </div>
       </div>
     </section>

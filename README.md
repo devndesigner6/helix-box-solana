@@ -141,7 +141,7 @@ For model tools, set `OPENROUTER_API_KEY` to a funded backend-only key and `MODE
 
 No paid Render upgrade is required. The manager uses Bun's PostgreSQL driver with certificate verification and parameterized queries, checks real schema/write permissions at startup, and fails closed if the configured database cannot initialize. Legacy local model records are copied without overwriting newer database records. A dedicated persistent SQLite disk remains an alternative for operators who already have one; an ephemeral directory does not satisfy payment durability.
 
-Use the CLI from this repository for the new agent tools; the previously published npm version does not include them yet. After `npm ci` and `npm run build` in `cli/`, run `node "C:\\path\\to\\helixbox-solana\\cli\\dist\\index.js"` from the project you want to pair. The CLI exposes live catalog, mandate, quote, purchase and status tools to Codex and Claude. Image/audio results are saved under `.helixbox-model-results/` in that project.
+Use CLI **0.2.0 or newer** for the agent model tools. From the project you want to pair, run `npx helixbox-cli@latest --new` and scan its QR with the updated Android app. The CLI exposes live catalog, mandate, quote, purchase and status tools to Codex and Claude. Image/audio results are saved under `.helixbox-model-results/` in that project. For local development, run `npm ci` and `npm run build` in `cli/` instead.
 
 - Pairing codes with a seven-day lifetime, separate from model purchase identity
 - Dual-channel architecture (control + data)
