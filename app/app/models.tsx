@@ -38,6 +38,7 @@ export default function ModelTools() {
       contentContainerStyle={{padding:16,paddingBottom:Math.max(insets.bottom,16),gap:12}}
       ListHeaderComponent={<View style={{gap:12}}>
         <Text style={{...text,fontSize:18,fontFamily:fonts.sans.semibold}}>A model for the task.</Text>
+        <Text style={muted}>Connect your wallet, choose models and spending limits, then approve funding in your wallet. Your paired agent can request calls within those limits while this app is open. Workspace tools remain free.</Text>
         <Text style={muted}>Your workspace and your laptop's coding agents stay free. Buy a model call directly, or approve a capped mandate for your agents.</Text>
         <Text style={muted}>{tools.catalog?.generationStatus??'Fetching the live model catalog…'}</Text>
         {!tools.paired?<Text style={muted}>Pair your laptop to create quotes and recover purchases.</Text>:null}

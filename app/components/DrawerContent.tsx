@@ -17,6 +17,7 @@ import {
   ChevronDown,
   ChevronRight,
   CopyMinus,
+  Cpu,
   File,
   Folder,
   FolderOpen,
@@ -761,6 +762,10 @@ export default function DrawerContent(props: DrawerContentComponentProps) {
 
         {/* Bottom bar */}
         <View style={[styles.bottomBar, { borderTopColor: colors.border.secondary }]}>
+          <TouchableOpacity accessibilityRole="button" accessibilityLabel="Model tools" onPress={() => closeDrawerThen(() => router.push('/models' as any))} style={styles.bottomBtn} activeOpacity={0.7}>
+            <Cpu size={22} color={colors.fg.muted} strokeWidth={1.6} />
+            <Text style={[styles.bottomBtnLabel, { color: colors.fg.subtle, fontFamily: fonts.sans.regular }]}>Models</Text>
+          </TouchableOpacity>
           <TouchableOpacity onPress={handleHomePress} style={styles.bottomBtn} activeOpacity={0.7}>
             <Home size={22} color={colors.fg.muted} strokeWidth={1.6} />
             <Text style={[styles.bottomBtnLabel, { color: colors.fg.subtle, fontFamily: fonts.sans.regular }]}>{t('common.home')}</Text>

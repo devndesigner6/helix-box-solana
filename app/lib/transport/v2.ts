@@ -85,12 +85,34 @@ export class V2SessionTransport {
   private secureReadyResolve: (() => void) | null = null;
   private secureReadyReject: ((error: Error) => void) | null = null;
   private secureReadyPromise: Promise<void> | null = null;
+  private connectionCancel: ((error: Error) => void) | null = null;
 
   constructor(options: V2TransportOptions) {
     this.options = options;
   }
 
   async connect(): Promise<void> {
+    if (this.ws && this.ws.readyState <= WebSocket.OPEN && this.secureReadyPromise) {
+      return await this.secureReadyPromise;
+    }
+    this.closed = false;
+    let timeout: ReturnType<typeof setTimeout> | undefined;
+    const cancelled = new Promise<never>((_, reject) => {
+      this.connectionCancel = reject;
+      timeout = setTimeout(() => {
+        reject(new Error('Secure connection timed out'));
+        this.close();
+      }, 20000);
+    });
+    try {
+      await Promise.race([this.connectInternal(), cancelled]);
+    } finally {
+      clearTimeout(timeout);
+      this.connectionCancel = null;
+    }
+  }
+
+  private async connectInternal(): Promise<void> {
     if (this.ws && this.ws.readyState <= WebSocket.OPEN) {
       if (this.secureReadyPromise) {
         return await this.secureReadyPromise;
@@ -99,10 +121,12 @@ export class V2SessionTransport {
     }
 
     await sodium.ready;
+    if (this.closed) throw new Error('Connection closed');
     this.secureReadyPromise = new Promise<void>((resolve, reject) => {
       this.secureReadyResolve = resolve;
       this.secureReadyReject = reject;
     });
+    void this.secureReadyPromise.catch(() => {});
 
     const wsUrl = buildSessionV2WsUrl(
       this.options.gatewayUrl,
@@ -198,6 +222,8 @@ export class V2SessionTransport {
   }
 
   close(): void {
+    this.connectionCancel?.(new Error('Connection closed'));
+    this.failSecure(new Error('Connection closed'));
     this.closed = true;
     this.state = 'closed';
     if (!this.ws) return;

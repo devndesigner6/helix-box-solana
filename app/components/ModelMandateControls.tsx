@@ -57,11 +57,11 @@ export default function ModelMandateControls({selected,purchase,enabled,onResult
     {error||modelMandateRunnerError()?<Text accessibilityRole="alert" selectable style={text}>{error||modelMandateRunnerError()}</Text>:null}
     {notice?<Text accessibilityLiveRegion="polite" style={text}>{notice}</Text>:null}
     {mandates.map(m=><View key={m.id} style={{gap:8,paddingVertical:12}}>
-      <Text style={{...text,fontFamily:fonts.sans.semibold}}>{m.state} · {formatUSDC(m.spentAmount)} / {formatUSDC(m.policy.totalAmount)} USDC · {m.usedCalls}/{m.policy.maxCalls} calls</Text>
+      <Text style={{...text,fontFamily:fonts.sans.semibold}}>{m.state!=='stopped'&&m.policy.expiresAt<=Date.now()?'expired':m.state} · {formatUSDC(m.spentAmount)} / {formatUSDC(m.policy.totalAmount)} USDC · {m.usedCalls}/{m.policy.maxCalls} calls</Text>
       <Text style={muted}>{m.policy.models.map(model=>model.id).join(', ')} · expires {new Date(m.policy.expiresAt).toLocaleTimeString()}</Text>
       {m.reservedAmount!=='0'?<Text style={muted}>{formatUSDC(m.reservedAmount)} USDC held for a pending purchase. Do not fund again.</Text>:null}
       {m.channel?<Text style={muted}>Channel {m.channel.status} · settled {formatUSDC(m.channel.settledAmount)} USDC</Text>:null}
-      {m.state==='pending'?<Pressable accessibilityRole="button" disabled={busy||purchase?.state!=='quoted'} style={button} onPress={()=>void act(async value=>{
+      {m.state==='pending'&&m.policy.expiresAt>Date.now()?<Pressable accessibilityRole="button" disabled={busy||purchase?.state!=='quoted'} style={button} onPress={()=>void act(async value=>{
         if(!purchase)throw new Error('Create a fixed model quote first');const result=await fundPhoneMandate(value.sessionCode!,value.sessionPassword,m.id,purchase);onResult(result.id);
       })}><Text style={text}>Fund {formatUSDC(m.policy.totalAmount)} USDC in MetaMask and run this quote</Text></Pressable>:null}
       {m.state!=='stopped'?<Pressable accessibilityRole="button" disabled={busy} style={button} onPress={()=>void act(async value=>{await stopPhoneMandate(value.sessionCode!,value.sessionPassword,m.id);setNotice('New purchases stopped. An already signed purchase can still finish.');})}><Text style={text}>Stop new purchases</Text></Pressable>:null}

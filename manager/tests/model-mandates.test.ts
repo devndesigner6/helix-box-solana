@@ -4,6 +4,14 @@ import { createMandateStore } from '../src/model-mandates.ts';
 const payer = '7sbe2WLBQxJCBmPfL2xsy7WiFzjMS147R1DUK7LHwxyy';
 const policy = () => ({ payer, authorizer: 'CjNFTjvBhbJJd2B5ePPMHRLx1ELZpa8dwQgGL727eKww', models: [{ id: 'lab/code', kind: 'chat' as const }], totalAmount: '10000', perCallAmount: '6000', maxCalls: 2, expiresAt: Date.now() + 60000 });
 const quote = (id: string, amount = '6000') => ({ id, modelId: 'lab/code', kind: 'chat' as const, amount, expiresAt: Date.now() + 30000 });
+test('expired mandates do not consume the open mandate limit', async () => {
+    let time = Date.now();
+    const store = createMandateStore(new Database(':memory:'), () => time);
+    for (let i = 0; i < 10; i++) await store.create('owner', { ...policy(), expiresAt: time + 1000 });
+    await expect(store.create('owner', { ...policy(), expiresAt: time + 5000 })).rejects.toThrow('Too many');
+    time += 1001;
+    expect((await store.create('owner', { ...policy(), expiresAt: time + 5000 })).state).toBe('pending');
+});
 test('concurrent reservations never spend the same remaining mandate budget twice',async()=>{
     const store=createMandateStore(new Database(':memory:')),m=await store.create('owner',policy());
     await store.activate('owner',m.id,payer);

@@ -25,14 +25,23 @@ export function formatUSDC(amount:string):string {
   return String(value/1000000n)+(fraction?'.'+fraction:'');
 }
 export async function modelRequest<T>(path:string,password?:string,body?:unknown):Promise<T> {
+  const controller=new AbortController();
+  const timeout=setTimeout(()=>controller.abort(),30000);
+  try {
   const response = await fetch(`${MANAGER}/v2/models${path}`,{
     method:body===undefined?'GET':'POST',
+    signal:controller.signal,
     headers:{Accept:'application/json',...(password?{Authorization:`Bearer ${password}`} :{}),...(body===undefined?{}:{'Content-Type':'application/json'})},
     ...(body===undefined?{}:{body:JSON.stringify(body)}),
   });
   const data=await response.json().catch(()=>null);
+  if(controller.signal.aborted) throw new Error('Model request timed out');
   if(!response.ok) throw new Error(typeof data?.error==='string'?data.error:`Model service unavailable (${response.status})`);
   return data as T;
+  } catch(error) {
+    if(controller.signal.aborted) throw new Error('Model request timed out. Check the existing purchase or mandate status before trying again.');
+    throw error;
+  } finally { clearTimeout(timeout); }
 }
 export async function payForModelCall(job:ModelPurchase,password:string):Promise<ModelPurchase> {
   if(!/^[a-f0-9-]{36}$/.test(job.id)) throw new Error('Invalid model purchase');

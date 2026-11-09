@@ -14,6 +14,7 @@ import { DrawerActions, useNavigation } from "@react-navigation/native";
 import * as Haptics from "expo-haptics";
 import { ChevronDown, ChevronUp, File, Folder, Keyboard as KeyboardIcon, Save, Search, Star, X } from "lucide-react-native";
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { enqueueEditorWrite } from "@/lib/editor-write-queue.mjs";
 import {
   Alert,
   Keyboard,
@@ -331,6 +332,7 @@ export default function EditorPanel({ bottomBarHeight: _bottomBarHeight }: Plugi
   const searchInputRef = useRef<any>(null);
   const tabsRef = useRef<EditorTab[]>([]);
   const saveTimeoutsRef = useRef<Record<string, ReturnType<typeof setTimeout>>>({});
+  const writesRef = useRef<Record<string, Promise<void>>>({});
   const webViewRef = useRef<WebView | null>(null);
   const webViewContentRef = useRef<Record<string, string>>({});
   const keyboardHeightSV = useSharedValue(0);
@@ -415,7 +417,9 @@ export default function EditorPanel({ bottomBarHeight: _bottomBarHeight }: Plugi
     );
 
     try {
-      await fs.write(targetTab.path, snapshot, "utf8", undefined, { source: "editor" });
+      await enqueueEditorWrite(writesRef.current, targetTab.path, async () => {
+        await fs.write(targetTab.path, snapshot, "utf8", undefined, { source: "editor" });
+      });
       setTabs((prev) =>
         prev.map((tab) => {
           if (tab.id !== tabId) {
@@ -427,7 +431,7 @@ export default function EditorPanel({ bottomBarHeight: _bottomBarHeight }: Plugi
             ...tab,
             lastSavedContent: snapshot,
             isDirty: latestSnapshot !== snapshot,
-            isSaving: false,
+            isSaving: Boolean(writesRef.current[targetTab.path]),
             saveError: null,
           };
         })
@@ -437,7 +441,7 @@ export default function EditorPanel({ bottomBarHeight: _bottomBarHeight }: Plugi
       setTabs((prev) =>
         prev.map((tab) =>
           tab.id === tabId
-            ? { ...tab, isSaving: false, saveError: message, isDirty: true }
+            ? { ...tab, isSaving: Boolean(writesRef.current[targetTab.path]), saveError: message, isDirty: true }
             : tab
         )
       );

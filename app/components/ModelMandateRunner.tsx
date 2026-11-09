@@ -10,14 +10,14 @@ export const modelMandateRunnerError=()=>lastError;
 export default function ModelMandateRunner() {
   const {sessionCode,getPairedSessions,getStoredSession}=useConnection();
   useEffect(()=>{
-    let cancelled=false,busy=false,enabled:boolean|null=null;
+    let cancelled=false,busy=false,enabled:boolean|null=null,nextCheck=0;
     const current=()=>!cancelled&&AppState.currentState==='active';
     const tick=async()=>{
       if(!current()||busy)return;busy=true;
       try {
         const session=sessionCode?(await getPairedSessions()).find(s=>s.sessionCode===sessionCode):await getStoredSession();
         if(!session?.sessionCode||!current())return;
-        if(enabled===null)enabled=(await modelRequest<ModelCatalog>('')).paymentsEnabled;
+        if(enabled===null||Date.now()>=nextCheck){enabled=(await modelRequest<ModelCatalog>('')).paymentsEnabled;nextCheck=Date.now()+30000;}
         if(!enabled)return;
         const pending=await modelRequest<{requests:{mandate:ModelMandate;purchase:ModelPurchase}[]}>('/mandates/pending',session.sessionPassword);
         const {mandates}=await modelRequest<{mandates:ModelMandate[]}>('/mandates',session.sessionPassword);

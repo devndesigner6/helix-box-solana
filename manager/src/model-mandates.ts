@@ -85,10 +85,8 @@ export function createMandateStore(input: ModelDatabaseInput, now = Date.now) {
                 !Array.isArray(policy.models) || policy.models.length < 1 || policy.models.length > 50 ||
                 policy.models.some(m => !m || typeof m.id !== 'string' || !m.id || m.id.length > 256 || !['chat', 'image', 'voice'].includes(m.kind)))
                 throw new Error('Invalid mandate limits');
-            const count = await db.query("SELECT count(*) AS n FROM model_mandates WHERE owner=? AND state!='stopped'").get(owner) as {
-                n: number;
-            };
-            if (count.n >= 10)
+            const open = await db.query("SELECT policy FROM model_mandates WHERE owner=? AND state!='stopped'").all(owner) as { policy: string }[];
+            if (open.filter(m => (JSON.parse(m.policy) as MandatePolicy).expiresAt > now()).length >= 10)
                 throw new Error('Too many open mandates; close an existing mandate first');
             const id = randomUUID();
             await db.query('INSERT INTO model_mandates VALUES (?,?,?,NULL,?,?)').run(id, owner, JSON.stringify(policy), 'pending', now());
